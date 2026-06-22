@@ -1,0 +1,8 @@
+{
+  "name": "Remix: AWS VPC Lattice Simulator",
+  "description": "An interactive microservices traffic simulator, CLI explorer, and production-grade Terraform blueprint repository for AWS VPC Lattice.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
