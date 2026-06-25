@@ -4,5 +4,11 @@ dist/
 coverage/
 .DS_Store
 *.log
+*.local
+*.tsbuildinfo
+.vite/
+.vscode/*
+!.vscode/extensions.json
+.idea/
 .env*
 !.env.example

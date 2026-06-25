@@ -1,12 +1,30 @@
-# AWS VPC Lattice Production Architecture Guide
+# AWS VPC Lattice Simulator
 
-Welcome to the **AWS VPC Lattice Showcase and Interactive Simulation Portal**. This repository contains a fully structured, production-ready Multi-Account & Multi-VPC terraform infrastructure, along with absolute guidance on setting up, testing, and managing traffic using the AWS CLI and IAM-based authentication (SigV4).
+An interactive, in-browser simulator and learning tool for **AWS VPC Lattice** — multi-account/multi-VPC service networking, SigV4 IAM authorization, and weighted canary routing. It's a static React app: there's no backend and no live AWS calls. All traffic, logs, and policy evaluation are simulated client-side so you can explore Lattice behavior without an AWS account.
+
+## Features
+
+- **Topology Simulation** — fire simulated requests through a client → Lattice endpoint → service network → target group path, watch the animated trace, and see allow/deny decisions and weighted canary splits land in a live access-log table. Includes quick presets (authorized/unauthorized payments, v1/v2 path routing, anonymous block).
+- **IAM Policy Lab** — edit the Service Network and Service auth policy JSON side by side and see how the dual-layer (defense-in-depth) authorization model changes simulated request outcomes.
+- **Terraform Blueprints** — browse annotated, illustrative Terraform for a 3-VPC / 2-account Lattice setup (consumer VPC, Orders & Payments provider VPCs, RAM sharing, IP and Lambda target groups).
+- **AWS CLI Playbook** — a reference of representative `aws vpc-lattice` / `aws ram` commands with sample output, for learning the CLI surface area.
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+Then open `http://localhost:3000`.
+
+Other scripts: `npm run build` (production build), `npm run preview` (preview the build), `npm run lint` (`tsc --noEmit`).
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
-AWS VPC Lattice is an application-layer service network that connects, secures, and monitors your services across different VPCs and AWS accounts. It removes the need for transit gateways, private links, elaborate routing tables, or overlapping CIDR coordination.
+AWS VPC Lattice is an application-layer service network that connects, secures, and monitors services across different VPCs and AWS accounts, without transit gateways, PrivateLink, elaborate routing tables, or overlapping CIDR coordination. This is the topology the simulator models:
 
 ```
                   [ ACCOUNT A: CONSUMER ]
@@ -37,27 +55,25 @@ AWS VPC Lattice is an application-layer service network that connects, secures, 
 +------------------------+              +------------------------+
 ```
 
-Our Terraform workspace includes configurations for:
-- **Three Isolated VPCs**: One consumer/client VPC (Account A) and two backend VPCs (Account B - Orders & Payments).
-- **Service Network**: A central communication domain shared securely across boundaries with custom IAM Auth policies.
-- **Microservices Deployment**: Zero-trust authenticated services backed by IP targets (ECS/Fargate) and Serverless targets (AWS Lambda) with canary weighted loops.
-- **Cross-Account Sharing**: Integrated with **AWS RAM (Resource Access Manager)** to link VPC networks automatically.
+The **Terraform Blueprints** tab (backed by `terraform/`) illustrates:
+- **Three isolated VPCs**: one consumer/client VPC (Account A) and two backend VPCs (Account B — Orders & Payments).
+- **Service Network**: a central communication domain shared securely across account boundaries with custom IAM auth policies.
+- **Microservice targets**: IP targets (ECS/Fargate) and serverless targets (Lambda) behind weighted canary rules.
+- **Cross-account sharing**: AWS RAM (Resource Access Manager) to link VPCs to the service network.
 
-All Terraform files are stored in the `/terraform` directory of this codebase.
+> ⚠️ **This Terraform is illustrative, not deploy-ready.** It uses placeholder account IDs (`111111111111` / `222222222222`), has no remote backend/state configuration, and is intended to be read alongside the simulator — not applied to a real AWS account as-is. If you want to adapt it for real use, review every resource, wire up real account IDs/roles, and add a backend config first.
 
 ---
 
-## 🔒 IAM-Based Authentication & SigV4 signing
+## IAM-Based Authentication & SigV4 Signing
 
-AWS VPC Lattice natively supports **AWS_SIGV4** as an authorization mechanism. When enabled, every HTTP or gRPC request must be signed with AWS credentials using the Standard Signature Version 4 protocol.
+AWS VPC Lattice natively supports **AWS_SIGV4** as an authorization mechanism: every HTTP or gRPC request can be required to carry a Signature Version 4-signed AWS credential. The **IAM Policy Lab** tab lets you edit both policy layers and see how they interact:
 
-### 1. The Policy Layering
-Lattice applies a **Defense-in-Depth** dual authorization model:
-1. **Service Network Auth Policy**: A broad gatekeeper policy that governs who can access any service within the entire mesh.
-2. **Service Auth Policy**: A narrow granular policy applied to specific microservices governing direct access rules.
+1. **Service Network Auth Policy** — a broad gatekeeper policy governing access to any service within the mesh.
+2. **Service Auth Policy** — a narrower policy applied to a specific microservice.
 
-### 2. Sample Service Auth Policy for High Security
-Applied to the `Payments Service`, this restricts transactions solely to a specific financial role within Account A:
+Example Service Auth Policy (as used by the simulator's "Payments" service), restricting access to a specific role:
+
 ```json
 {
   "Version": "2012-10-17",
@@ -69,7 +85,7 @@ Applied to the `Payments Service`, this restricts transactions solely to a speci
         "AWS": "arn:aws:iam::111111111111:role/FinanceServiceRole"
       },
       "Action": "vpc-lattice-svcs:Invoke",
-      "Resource": "arn:aws:aws:vpc-lattice:us-east-1:222222222222:service/svc-payment123",
+      "Resource": "arn:aws:vpc-lattice:us-east-1:222222222222:service/svc-payment123",
       "Condition": {
         "StringEquals": {
           "vpc-lattice-svcs:RequestMethod": "POST"
@@ -82,89 +98,37 @@ Applied to the `Payments Service`, this restricts transactions solely to a speci
 
 ---
 
-## ⌨️ AWS CLI Command Reference
+## AWS CLI Reference
 
-This playbook covers complete command sequences required to discover resources, manage configurations, and observe active logs.
-
-### 1. Resource Discovery & Diagnostics
-Client nodes can instantly resolve and audit current Service Networks or linked services.
+The **AWS CLI Playbook** tab in the app surfaces commands like these (with canned sample output) as a learning reference — they aren't executed against any real account from this repo:
 
 ```bash
-# List all active Service Networks in the provider account
+# List all active Service Networks
 aws vpc-lattice list-service-networks --region us-east-1
 
-# Describe the custom parameters and auth configurations
+# Describe a Service Network's configuration
 aws vpc-lattice get-service-network \
   --service-network-identifier arn:aws:vpc-lattice:us-east-1:222222222222:servicenetwork/sn-01a2b3c4f5
 
-# List services associated with the Service Network
+# List services associated with a Service Network
 aws vpc-lattice list-service-network-service-associations \
   --service-network-identifier sn-01a2b3c4f5
-```
 
-### 2. Cross-Account Acceptance via AWS RAM (Consumer Side)
-Once shared via Terraform/RAM from Account B, the Consumer Account A must confirm and accept:
-
-```bash
-# List resources shared with your account
-aws ram get-resource-shares \
-  --resource-owner OTHER-ACCOUNTS \
-  --region us-east-1
-
-# Accept the RAM resource share invitation
+# Accept a cross-account RAM resource share invitation
 aws ram accept-resource-share-invitation \
   --resource-share-invitation-arn arn:aws:ram:us-east-1:222222222222:resource-share-invitation/xyz-abc
-```
 
-### 3. Traffic Management & Canary Rule Adjustments
-To adjust target groups weights on the fly without changing underlying deployment code:
-
-```bash
-# List listeners attached to the Order Service
-aws vpc-lattice list-listeners --service-identifier svc-088c676451e0123
-
-# Update a listener rule on a Service to change weights (e.g., 50/50 Blue-Green Canary)
+# Adjust canary weights on a listener (e.g. 50/50 blue-green)
 aws vpc-lattice update-listener \
   --service-identifier svc-088c676451e0123 \
   --listener-identifier listener-02b4d5e \
   --default-action '{"forward": {"targetGroups": [{"targetGroupIdentifier": "tg-v1", "weight": 50}, {"targetGroupIdentifier": "tg-v2", "weight": 50}]}}'
-```
 
-### 4. Direct Node-to-Node Curl Verification with SigV4
-To trigger requests from a consumer EC2 container where SigV4 is required:
-
-```bash
-# Query the orders endpoint using AWS CLI curl with built-in request signing
+# Sign a request to a Lattice service with SigV4 via curl
 curl -H "Host: orders.corp.internal" \
      --aws-sigv4 "aws:amz:us-east-1:vpc-lattice-svcs" \
      --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" \
      http://orders-service-y01ab2c34d.vpc-lattice.us-east-1.on.aws/orders
 ```
 
----
-
-## 🚀 How to Deploy Using Terraform
-
-Follow these sequential instructions to build the multi-account, securing network:
-
-### Prerequisites:
-- AWS CLI configured with credentials for both **Account A (Consumer)** and **Account B (Provider)**.
-- Local Terraform installation.
-
-### Steps:
-1. Clone the project or use the source files located in `/terraform`.
-2. Initialize and validate:
-   ```bash
-   cd terraform
-   terraform init
-   terraform validate
-   ```
-3. Run a plan to inspect the resource topology:
-   ```bash
-   terraform plan -out=lattice.plan
-   ```
-4. Deploy the infrastructure:
-   ```bash
-   terraform apply lattice.plan
-   ```
-5. Confirm resources represent correct states by reviewing output DNS routes.
+If you want to run these against a real AWS account, you'll need your own actual Lattice service network, services, and IAM credentials — none of the IDs above are real.
