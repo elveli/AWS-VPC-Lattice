@@ -50,7 +50,7 @@ export const CLITerminal: React.FC = () => {
       <div className="px-6 py-4.5 bg-neutral-900/60 border-b border-neutral-800 flex items-center justify-between">
         <div className="flex items-center space-x-2.5">
           <TerminalIcon className="w-4 h-4 text-neutral-400" />
-          <h2 className="font-serif font-light text-base text-neutral-200">AWS AWSCLI Terminal Emulator</h2>
+          <h2 className="font-serif font-light text-base text-neutral-200">AWS CLI Terminal Emulator</h2>
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -81,7 +81,7 @@ export const CLITerminal: React.FC = () => {
                       : "bg-[#070707] border-neutral-800 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700"
                   }`}
                 >
-                  <ChevronRight className="w-4 h-4 text-neutral-550 mt-0.5 flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-neutral-500 mt-0.5 flex-shrink-0" />
                   <div>
                     <code className="font-mono text-neutral-100 font-medium block whitespace-pre-wrap break-all mb-1 leading-relaxed">
                       {item.command.replace(" --region us-east-1", "")}
@@ -105,7 +105,7 @@ export const CLITerminal: React.FC = () => {
               type="text"
               value={typedInput}
               onChange={(e) => setTypedInput(e.target.value)}
-              className="flex-1 bg-transparent font-mono text-xs text-neutral-200 focus:outline-none placeholder-neutral-750"
+              className="flex-1 bg-transparent font-mono text-xs text-neutral-200 focus:outline-none placeholder-neutral-700"
               placeholder="Type custom aws vpc-lattice command..."
               onKeyDown={(e) => e.key === "Enter" && handleRunCommand()}
             />
@@ -127,7 +127,7 @@ export const CLITerminal: React.FC = () => {
             ) : (
               commandHistory.map((hist, idx) => (
                 <div key={idx} className="border-b border-neutral-900 pb-3.5 last:border-0 last:pb-0">
-                  <div className="flex items-center text-neutral-450 mb-1.5">
+                  <div className="flex items-center text-neutral-400 mb-1.5">
                     <span className="text-neutral-500 italic mr-2.5 font-sans lowercase text-[10px]">sh-4.2$</span>
                     <span className="font-bold text-neutral-200">{hist.cmd}</span>
                   </div>

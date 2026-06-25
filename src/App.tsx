@@ -383,7 +383,7 @@ export default function App() {
                       className={`py-3.5 font-semibold text-xs uppercase tracking-[0.15em] rounded-none shadow-md transition flex items-center justify-center space-x-2 border ${
                         isAutoTrafficActive
                           ? "bg-emerald-950/80 border-emerald-500/80 text-emerald-400 font-bold"
-                          : "bg-neutral-900 border-neutral-850 text-neutral-400 hover:border-neutral-700 hover:text-white"
+                          : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:text-white"
                       }`}
                     >
                       <Activity className={`w-3.5 h-3.5 ${isAutoTrafficActive ? "animate-[pulse_1s_infinite]" : ""}`} />

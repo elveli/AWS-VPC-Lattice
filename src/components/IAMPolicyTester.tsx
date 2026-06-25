@@ -41,7 +41,7 @@ export const IAMPolicyTester: React.FC<IAMPolicyTesterProps> = ({ config, onConf
         "AWS": "arn:aws:iam::111111111111:role/FinanceServiceRole"
       },
       "Action": "vpc-lattice-svcs:Invoke",
-      "Resource": "arn:aws:aws:vpc-lattice:us-east-1:222222222222:service/svc-payments",
+      "Resource": "arn:aws:vpc-lattice:us-east-1:222222222222:service/svc-payments",
       "Condition": {
         "StringEquals": {
           "vpc-lattice-svcs:RequestMethod": "POST"
@@ -189,7 +189,7 @@ export const IAMPolicyTester: React.FC<IAMPolicyTesterProps> = ({ config, onConf
         <div className={`p-5 border rounded-none ${
           evaluationResult.decision === "ALLOW" 
             ? "bg-[#0b1410] border-emerald-950 text-emerald-300"
-            : "bg-[#160c1c/30] border-rose-950/40 text-rose-300"
+            : "bg-[#160c1c]/30 border-rose-950/40 text-rose-300"
         }`}>
           <div className="flex items-start space-x-3.5">
             {evaluationResult.decision === "ALLOW" ? (
@@ -200,7 +200,7 @@ export const IAMPolicyTester: React.FC<IAMPolicyTesterProps> = ({ config, onConf
             <div>
               <div className="flex items-center space-x-3">
                 <span className={`text-[9px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-none ${
-                  evaluationResult.decision === "ALLOW" ? "bg-[#0b2416] border border-emerald-800/40 text-emerald-400" : "bg-[#291114] border border-rose-800/40 text-rose-405"
+                  evaluationResult.decision === "ALLOW" ? "bg-[#0b2416] border border-emerald-800/40 text-emerald-400" : "bg-[#291114] border border-rose-800/40 text-rose-400"
                 }`}>
                   POLICY {evaluationResult.decision}
                 </span>

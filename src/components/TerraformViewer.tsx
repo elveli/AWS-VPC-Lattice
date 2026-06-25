@@ -44,7 +44,7 @@ export const TerraformViewer: React.FC = () => {
       <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden font-sans">
         {/* File Navigator List (Left) */}
         <div className="md:col-span-3 border-b md:border-b-0 md:border-r border-neutral-800 p-5 bg-neutral-900/10 overflow-y-auto max-h-[140px] md:max-h-none">
-          <span className="text-[9px] font-bold text-neutral-550 uppercase tracking-[0.2em] block mb-3.5 font-mono">
+          <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.2em] block mb-3.5 font-mono">
             TF Config Workspace
           </span>
           <div className="space-y-1.5">
@@ -57,7 +57,7 @@ export const TerraformViewer: React.FC = () => {
                   className={`w-full text-left p-2.5 rounded-none text-xs font-mono transition flex items-center space-x-2 border ${
                     active
                       ? "bg-neutral-900 border-neutral-500 text-white font-semibold"
-                      : "bg-transparent border-transparent text-neutral-500 hover:text-neutral-205 hover:bg-neutral-900/40"
+                      : "bg-transparent border-transparent text-neutral-500 hover:text-neutral-200 hover:bg-neutral-900/40"
                   }`}
                 >
                   <File className={`w-3.5 h-3.5 ${active ? "text-neutral-300" : "text-neutral-600"}`} />
@@ -76,7 +76,7 @@ export const TerraformViewer: React.FC = () => {
             <span>{selectedFile.description}</span>
           </div>
 
-          <div className="flex-1 p-5 overflow-y-auto max-h-[280px] md:max-h-none font-mono text-xs text-neutral-350 leading-relaxed select-text space-y-4">
+          <div className="flex-1 p-5 overflow-y-auto max-h-[280px] md:max-h-none font-mono text-xs text-neutral-300 leading-relaxed select-text space-y-4">
             <pre className="whitespace-pre-wrap break-all select-all font-mono leading-relaxed tracking-normal">
               {selectedFile.code}
             </pre>

@@ -48,7 +48,12 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     // Step 0 -> Step 1: Outbound intercept by link-local range
     setStep(1);
     setOutcomeMessage("Request initiated... intercepting traffic via local range 169.254.171.1");
-    
+
+    // Track every timer in the chain so cleanup can cancel whichever ones have been scheduled so far.
+    let t2: ReturnType<typeof setTimeout>;
+    let t3: ReturnType<typeof setTimeout>;
+    let t4: ReturnType<typeof setTimeout>;
+
     // Animate to Lattice Endpoint
     const t1 = setTimeout(() => {
       setStep(2);
@@ -56,7 +61,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
       setOutcomeMessage("Forwarding to central Service Network (222222222222) via AWS RAM link...");
 
       // Step 2 -> Step 3: Service Network Auth policy checks
-      const t2 = setTimeout(() => {
+      t2 = setTimeout(() => {
         setPacketPos({ x: nodes.serviceNetwork.x, y: nodes.serviceNetwork.y });
         
         // Evaluate Service Network general policy
@@ -81,7 +86,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         setOutcomeMessage("Service Network Auth: PASSED (Signed by Account 111111111111)");
 
         // Step 3 -> Step 4: Evaluate Specific Service Auth policy
-        const t3 = setTimeout(() => {
+        t3 = setTimeout(() => {
           if (config.targetService === "payments") {
             setPacketPos({ x: nodes.paymentsService.x, y: nodes.paymentsService.y });
             
@@ -100,7 +105,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
           setOutcomeMessage("Service Boundary Auth: PASSED! Evaluating Listener matching rules...");
 
           // Step 4 -> Step 5: Deliver to Target
-          const t4 = setTimeout(() => {
+          t4 = setTimeout(() => {
             let nextX = 0;
             let nextY = 0;
             let finalTargetLabel = "";
@@ -143,6 +148,9 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
 
     return () => {
       clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
     };
   }, [isRunning]);
 
@@ -244,7 +252,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0a0a] border border-neutral-805 rounded-none overflow-hidden shadow-2xl">
+    <div className="flex flex-col h-full bg-[#0a0a0a] border border-neutral-800 rounded-none overflow-hidden shadow-2xl">
       {/* Simulation Banner */}
       <div className="flex items-center justify-between px-6 py-4.5 bg-neutral-900/60 border-b border-neutral-800">
         <div className="flex items-center space-x-2.5">

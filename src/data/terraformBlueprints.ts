@@ -188,7 +188,7 @@ resource "aws_security_group" "order_app_sg" {
 resource "aws_vpclattice_service_network" "prod_network" {
   provider           = aws.provider
   name               = "corporate-prod-service-network"
-  auth_type          = "AWS_SIGV4" # Enforce AWS IAM (SigV4) Auth!
+  auth_type          = "AWS_IAM" # Enforce AWS IAM (SigV4) Auth!
 }
 
 # 2. ASSOCIATE PROVIDER VPCS (Account B)
@@ -202,9 +202,9 @@ resource "aws_vpclattice_service_network_vpc_association" "order_vpc_association
 # 3. SERVICE NETWORK AUTH POLICY
 # Enforces Zero-Trust boundary at entry
 resource "aws_vpclattice_auth_policy" "sn_policy" {
-  provider     = aws.provider
-  resource_arn = aws_vpclattice_service_network.prod_network.arn
-  policy       = jsonencode({
+  provider            = aws.provider
+  resource_identifier = aws_vpclattice_service_network.prod_network.arn
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -275,13 +275,13 @@ resource "aws_vpclattice_service_network_vpc_association" "consumer_vpc_associat
 resource "aws_vpclattice_service" "orders" {
   provider           = aws.provider
   name               = "orders-service"
-  auth_type          = "AWS_SIGV4"
+  auth_type          = "AWS_IAM"
 }
 
 resource "aws_vpclattice_service" "payments" {
   provider           = aws.provider
   name               = "payments-service"
-  auth_type          = "AWS_SIGV4"
+  auth_type          = "AWS_IAM"
 }
 
 # --- SERVICE MESH ATTACHMENT ---
@@ -358,9 +358,9 @@ resource "aws_vpclattice_listener_rule" "orders_v2_path_rule" {
 
 # --- DUAL-DEFENSE FINE-GRAINED POLICIES ---
 resource "aws_vpclattice_auth_policy" "payments_svc_auth" {
-  provider     = aws.provider
-  resource_arn = aws_vpclattice_service.payments.arn
-  policy       = jsonencode({
+  provider            = aws.provider
+  resource_identifier = aws_vpclattice_service.payments.arn
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
