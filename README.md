@@ -63,6 +63,17 @@ The **Terraform Blueprints** tab (backed by `terraform/`) illustrates:
 
 > ⚠️ **This Terraform is illustrative, not deploy-ready.** It uses placeholder account IDs (`111111111111` / `222222222222`), has no remote backend/state configuration, and is intended to be read alongside the simulator — not applied to a real AWS account as-is. If you want to adapt it for real use, review every resource, wire up real account IDs/roles, and add a backend config first.
 
+### Lattice vs. PrivateLink
+
+| | PrivateLink | VPC Lattice |
+|---|---|---|
+| Layer | L4 (network/transport) | L7 (HTTP/HTTPS/gRPC) |
+| Relationship | 1:1 — one endpoint per service | Many-to-many — a shared service network |
+| Routing | None — a private pipe to one target | Path-based rules, weighted/canary target groups |
+| Auth | Whatever the backend implements | Built-in IAM/SigV4, at both network and service level |
+
+In short: PrivateLink gives a VPC a private route to one specific service; Lattice is a mesh where many services across many accounts share routing and IAM auth policy. They're complementary, not mutually exclusive.
+
 ---
 
 ## IAM-Based Authentication & SigV4 Signing
