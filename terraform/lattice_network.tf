@@ -7,9 +7,9 @@
 # 1. CREATE SERVICE NETWORK (Account B - Provider)
 # ------------------------------------------------------------------------------
 resource "aws_vpclattice_service_network" "prod_network" {
-  provider           = aws.provider
-  name               = "corporate-prod-service-network"
-  auth_type          = "AWS_SIGV4" # Enforce AWS IAM (SigV4) Auth on the entire Service Network!
+  provider  = aws.provider
+  name      = "corporate-prod-service-network"
+  auth_type = "AWS_IAM" # Enforce AWS IAM (SigV4) Auth on the entire Service Network!
 
   tags = {
     Name = "Corporate-Prod-Service-Network"
@@ -20,10 +20,10 @@ resource "aws_vpclattice_service_network" "prod_network" {
 # 2. ASSOCIATE PROVIDER VPCS TO SERVICE NETWORK (Account B)
 # ------------------------------------------------------------------------------
 resource "aws_vpclattice_service_network_vpc_association" "order_vpc_association" {
-  provider           = aws.provider
-  vpc_identifier     = aws_vpc.order.id
+  provider                   = aws.provider
+  vpc_identifier             = aws_vpc.order.id
   service_network_identifier = aws_vpclattice_service_network.prod_network.id
-  security_group_ids = [aws_security_group.order_app_sg.id] # Optionally apply security groups for VPC boundaries
+  security_group_ids         = [aws_security_group.order_app_sg.id] # Optionally apply security groups for VPC boundaries
 
   tags = {
     Name = "Order-VPC-ServiceNetwork-Assoc"
@@ -31,10 +31,10 @@ resource "aws_vpclattice_service_network_vpc_association" "order_vpc_association
 }
 
 resource "aws_vpclattice_service_network_vpc_association" "payment_vpc_association" {
-  provider           = aws.provider
-  vpc_identifier     = aws_vpc.payment.id
+  provider                   = aws.provider
+  vpc_identifier             = aws_vpc.payment.id
   service_network_identifier = aws_vpclattice_service_network.prod_network.id
-  security_group_ids = [aws_security_group.payment_app_sg.id]
+  security_group_ids         = [aws_security_group.payment_app_sg.id]
 
   tags = {
     Name = "Payment-VPC-ServiceNetwork-Assoc"
@@ -46,21 +46,21 @@ resource "aws_vpclattice_service_network_vpc_association" "payment_vpc_associati
 # Allows authenticated traffic from the consumer account, while blocking anonymous.
 # ------------------------------------------------------------------------------
 resource "aws_vpclattice_auth_policy" "sn_policy" {
-  provider     = aws.provider
-  resource_arn = aws_vpclattice_service_network.prod_network.arn
-  policy       = jsonencode({
+  provider            = aws.provider
+  resource_identifier = aws_vpclattice_service_network.prod_network.arn
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowCrossAccountAuthenticatedAccess"
-        Effect    = "Allow"
+        Sid    = "AllowCrossAccountAuthenticatedAccess"
+        Effect = "Allow"
         Principal = {
           AWS = [
             "arn:aws:iam::${var.consumer_account_id}:root" # Authorize Account A root or specific roles/tasks
           ]
         }
-        Action    = "vpc-lattice-svcs:Invoke"
-        Resource  = "*" # Applies to all services registered inside this Service Network
+        Action   = "vpc-lattice-svcs:Invoke"
+        Resource = "*" # Applies to all services registered inside this Service Network
         Condition = {
           StringEquals = {
             "vpc-lattice-svcs:SourceVpc" = [aws_vpc.consumer.id] # Limit traffic specifically to our Consumer VPC!
@@ -108,8 +108,8 @@ resource "aws_ram_principal_association" "consumer_account_association" {
 # can link directly to the Service Network ARN.
 # ==============================================================================
 resource "aws_vpclattice_service_network_vpc_association" "consumer_vpc_association" {
-  provider           = aws.consumer
-  vpc_identifier     = aws_vpc.consumer.id
+  provider       = aws.consumer
+  vpc_identifier = aws_vpc.consumer.id
   # References the service network ID owned by Account B
   service_network_identifier = aws_vpclattice_service_network.prod_network.id
   security_group_ids         = [aws_security_group.client_sg.id]

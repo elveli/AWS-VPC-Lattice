@@ -11,7 +11,7 @@
 resource "aws_vpclattice_service" "orders" {
   provider           = aws.provider
   name               = "orders-service"
-  auth_type          = "AWS_SIGV4" # Double down on IAM (SigV4) authentication at the Service level
+  auth_type          = "AWS_IAM" # Double down on IAM (SigV4) authentication at the Service level
   custom_domain_name = "orders.corp.internal"
 
   tags = {
@@ -23,7 +23,7 @@ resource "aws_vpclattice_service" "orders" {
 resource "aws_vpclattice_service" "payments" {
   provider           = aws.provider
   name               = "payments-service"
-  auth_type          = "AWS_SIGV4"
+  auth_type          = "AWS_IAM"
   custom_domain_name = "payments.corp.internal"
 
   tags = {
@@ -38,12 +38,20 @@ resource "aws_vpclattice_service_network_service_association" "orders_assoc" {
   provider                   = aws.provider
   service_identifier         = aws_vpclattice_service.orders.id
   service_network_identifier = aws_vpclattice_service_network.prod_network.id
+
+  tags = {
+    Name = "Orders-ServiceNetwork-Assoc"
+  }
 }
 
 resource "aws_vpclattice_service_network_service_association" "payments_assoc" {
   provider                   = aws.provider
   service_identifier         = aws_vpclattice_service.payments.id
   service_network_identifier = aws_vpclattice_service_network.prod_network.id
+
+  tags = {
+    Name = "Payments-ServiceNetwork-Assoc"
+  }
 }
 
 # ------------------------------------------------------------------------------
@@ -57,24 +65,28 @@ resource "aws_vpclattice_target_group" "orders_v1" {
   name     = "orders-v1-tg"
   type     = "IP" # Can be: IP, INSTANCE, ALB, LAMBDA
   config {
-    vpc_identifier = aws_vpc.order.id
-    port           = 80
-    protocol       = "HTTP"
+    vpc_identifier  = aws_vpc.order.id
+    port            = 80
+    protocol        = "HTTP"
     ip_address_type = "IPV4"
 
     health_check {
-      enabled             = true
+      enabled                       = true
       health_check_interval_seconds = 30
       health_check_timeout_seconds  = 5
       healthy_threshold_count       = 2
       unhealthy_threshold_count     = 2
       matcher {
-        http_code = "200"
+        value = "200"
       }
-      path                = "/health"
-      port                = 80
-      protocol            = "HTTP"
+      path     = "/health"
+      port     = 80
+      protocol = "HTTP"
     }
+  }
+
+  tags = {
+    Name = "Orders-v1-TG"
   }
 }
 
@@ -83,6 +95,10 @@ resource "aws_vpclattice_target_group" "orders_v2" {
   provider = aws.provider
   name     = "orders-v2-lambda-tg"
   type     = "LAMBDA"
+
+  tags = {
+    Name = "Orders-v2-Lambda-TG"
+  }
 }
 
 # Target Group: Payments v1 Production (Containers in Payment VPC)
@@ -94,14 +110,18 @@ resource "aws_vpclattice_target_group" "payments_v1" {
     vpc_identifier = aws_vpc.payment.id
     port           = 80
     protocol       = "HTTP"
-    
+
     health_check {
-      enabled             = true
+      enabled                       = true
       health_check_interval_seconds = 15
-      path                = "/ping"
-      port                = 80
-      protocol            = "HTTP"
+      path                          = "/ping"
+      port                          = 80
+      protocol                      = "HTTP"
     }
+  }
+
+  tags = {
+    Name = "Payments-v1-TG"
   }
 }
 
@@ -130,6 +150,10 @@ resource "aws_vpclattice_listener" "orders" {
         weight                  = 10
       }
     }
+  }
+
+  tags = {
+    Name = "Orders-Listener"
   }
 }
 
@@ -160,6 +184,10 @@ resource "aws_vpclattice_listener_rule" "orders_v2_path_rule" {
       }
     }
   }
+
+  tags = {
+    Name = "Orders-v2-Path-Rule"
+  }
 }
 
 # Listener on Payments: Port 80
@@ -177,6 +205,10 @@ resource "aws_vpclattice_listener" "payments" {
       }
     }
   }
+
+  tags = {
+    Name = "Payments-Listener"
+  }
 }
 
 # ------------------------------------------------------------------------------
@@ -186,19 +218,19 @@ resource "aws_vpclattice_listener" "payments" {
 
 # Orders Auth Policy: Allow full access to any caller from Account A (Consumer)
 resource "aws_vpclattice_auth_policy" "orders_svc_auth" {
-  provider     = aws.provider
-  resource_arn = aws_vpclattice_service.orders.arn
-  policy       = jsonencode({
+  provider            = aws.provider
+  resource_identifier = aws_vpclattice_service.orders.arn
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowConsumerAccountAccessToOrders"
-        Effect    = "Allow"
+        Sid    = "AllowConsumerAccountAccessToOrders"
+        Effect = "Allow"
         Principal = {
           AWS = "arn:aws:iam::${var.consumer_account_id}:root"
         }
-        Action    = "vpc-lattice-svcs:Invoke"
-        Resource  = aws_vpclattice_service.orders.arn
+        Action   = "vpc-lattice-svcs:Invoke"
+        Resource = aws_vpclattice_service.orders.arn
         Condition = {
           # Restrict calls to specific read or creation paths
           StringLike = {
@@ -213,19 +245,19 @@ resource "aws_vpclattice_auth_policy" "orders_svc_auth" {
 # Payments Auth Policy: High-security constraint!
 # Consuming transactions is locked down to a highly privileged "FinanceServiceRole" running in Account A.
 resource "aws_vpclattice_auth_policy" "payments_svc_auth" {
-  provider     = aws.provider
-  resource_arn = aws_vpclattice_service.payments.arn
-  policy       = jsonencode({
+  provider            = aws.provider
+  resource_identifier = aws_vpclattice_service.payments.arn
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "RestrictPaymentsToFinanceRoleOnly"
-        Effect    = "Allow"
+        Sid    = "RestrictPaymentsToFinanceRoleOnly"
+        Effect = "Allow"
         Principal = {
           AWS = "arn:aws:iam::${var.consumer_account_id}:role/FinanceServiceRole"
         }
-        Action    = "vpc-lattice-svcs:Invoke"
-        Resource  = aws_vpclattice_service.payments.arn
+        Action   = "vpc-lattice-svcs:Invoke"
+        Resource = aws_vpclattice_service.payments.arn
         Condition = {
           StringEquals = {
             "vpc-lattice-svcs:RequestMethod" = ["POST"]
