@@ -2,6 +2,16 @@
 
 An interactive learning tool for **AWS VPC Lattice** — multi-account/multi-VPC service networking, SigV4 IAM authorization, and weighted canary routing — with two genuinely different ways to explore it from this one repo.
 
+## Contents
+
+- [Simulator vs. real deployment](#simulator-vs-real-deployment)
+- [Features](#features)
+- [Getting Started](#getting-started)
+- [Architecture Overview](#architecture-overview)
+  - [Lattice vs. PrivateLink](#lattice-vs-privatelink)
+- [IAM-Based Authentication & SigV4 Signing](#iam-based-authentication--sigv4-signing)
+- [AWS CLI Reference](#aws-cli-reference)
+
 ## Simulator vs. real deployment
 
 | | **Browser simulator** (this app, `src/`) | **Real AWS deployment** (`terraform/`) |

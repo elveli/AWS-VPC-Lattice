@@ -69,19 +69,47 @@ If a script fails with `curl: option --aws-sigv4: not supported`, the AMI's `cur
 
 ## Makefile shortcuts
 
-The `Makefile` at the repo root wraps the commands above (plus some read-only inspection ones) so you don't have to keep pasting ARNs/IDs by hand — everything it runs is a real `terraform`/`aws vpc-lattice`/`aws ram`/`aws ssm` call against whatever's actually deployed, resolved live via `terraform output`. Run `make help` from the repo root for the full list. Highlights:
+The `Makefile` at the repo root wraps the commands above (plus some read-only inspection ones) so you don't have to keep pasting ARNs/IDs by hand — everything it runs is a real `terraform`/`aws vpc-lattice`/`aws ram`/`aws ssm` call against whatever's actually deployed, resolved live via `terraform output`. Run `make help` from the repo root to print this same list from the Makefile itself.
 
-```
-make apply              # terraform apply
-make status             # service network + services + canary weights + target health, in one go
-make weights            # just the Orders listener's current v1/v2 split
-make demo-orders        # runs invoke-orders.sh on the client via SSM (no interactive session needed) — expect HTTP 200
-make demo-payments-allowed  # assumes FinanceServiceRole first — expect HTTP 200
-make demo-canary N=30   # samples the Orders listener 30x and tallies v1 vs v2
-make destroy            # terraform destroy
-```
+**Terraform lifecycle**
 
-`make demo-*` is the non-interactive equivalent of the "Try it out" walkthrough above — same scripts, run over SSM RunCommand instead of an interactive session, output printed straight to your terminal. `make shift-canary W1=.. W2=..` retargets the live listener weights directly via `update-listener`, outside of Terraform — useful for playing with the split live, but it'll show as drift in the next `terraform plan` until either `lattice_services.tf` is updated to match or you re-apply to reset it.
+| Target | What it does |
+|---|---|
+| `make init` | `terraform init` |
+| `make plan` | `terraform plan` |
+| `make apply` | `terraform apply` — real, cost-bearing AWS resources, see [Cost](#cost) |
+| `make destroy` | `terraform destroy` — tears down both accounts' resources |
+| `make outputs` | Print all terraform outputs |
+
+**Inspect the live stack** — read-only, safe to run anytime post-apply
+
+| Target | What it does |
+|---|---|
+| `make network` | Describe the Service Network (auth type, associations) |
+| `make services` | List services associated with the Service Network |
+| `make orders` | Describe the Orders service |
+| `make payments` | Describe the Payments service |
+| `make target-groups` | List all target groups in the provider account |
+| `make orders-health` | Health-check status of the Orders v1 (EC2) target |
+| `make payments-health` | Health-check status of the Payments v1 (EC2) target |
+| `make weights` | Show the Orders listener's current v1/v2 canary weight split |
+| `make ram-share` | Show the cross-account RAM resource share status |
+| `make status` | Runs `network` + `services` + `weights` + both health checks together |
+
+**Drive real traffic / mutate the live stack**
+
+| Target | What it does |
+|---|---|
+| `make connect` | Open an interactive SSM session on the client instance |
+| `make demo-orders` | Invoke Orders with the client's own role via SSM — expect HTTP 200 |
+| `make demo-payments-denied` | Invoke Payments with the client's own role via SSM — expect HTTP 403 |
+| `make demo-payments-allowed` | Invoke Payments after assuming `FinanceServiceRole` via SSM — expect HTTP 200 |
+| `make demo-canary N=30` | Sample the Orders listener N times via SSM and tally v1 vs v2 (`N` defaults to 20) |
+| `make shift-canary W1=50 W2=50` | Retarget Orders weights live via `update-listener` — **warning:** drifts from Terraform state until the next apply |
+
+`make demo-*` is the non-interactive equivalent of the "Try it out" walkthrough above — same scripts, run over SSM RunCommand instead of an interactive session, output printed straight to your terminal. `make shift-canary` mutates the live listener directly, outside of Terraform — useful for playing with the split live, but it'll show as drift in the next `terraform plan` until either `lattice_services.tf` is updated to match or you re-apply to reset it.
+
+Every target reads `REGION`/`CONSUMER_PROFILE`/`PROVIDER_PROFILE` from `terraform output` (falling back to the `terraform.tfvars.example` defaults if nothing's deployed yet); override any of them per-invocation, e.g. `make network PROVIDER_PROFILE=my-other-profile`.
 
 ## Destroy
 
