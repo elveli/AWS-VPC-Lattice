@@ -11,6 +11,30 @@
 # 1. CONSUMER VPC (Account A - Client calling services)
 # ==============================================================================
 
+# AWS's own managed prefix lists for VPC Lattice's link-local address ranges -
+# referenced instead of hardcoded CIDRs since they're the authoritative source
+# (each covers more than just the well-known 169.254.171.0/24 / fc00:ec2:80::/64
+# ranges quoted in AWS's docs - see the ingress rules below that use them).
+data "aws_ec2_managed_prefix_list" "vpc_lattice_ipv4_consumer" {
+  provider = aws.consumer
+  name     = "com.amazonaws.${var.aws_region}.vpc-lattice"
+}
+
+data "aws_ec2_managed_prefix_list" "vpc_lattice_ipv6_consumer" {
+  provider = aws.consumer
+  name     = "com.amazonaws.${var.aws_region}.ipv6.vpc-lattice"
+}
+
+data "aws_ec2_managed_prefix_list" "vpc_lattice_ipv4_provider" {
+  provider = aws.provider
+  name     = "com.amazonaws.${var.aws_region}.vpc-lattice"
+}
+
+data "aws_ec2_managed_prefix_list" "vpc_lattice_ipv6_provider" {
+  provider = aws.provider
+  name     = "com.amazonaws.${var.aws_region}.ipv6.vpc-lattice"
+}
+
 resource "aws_vpc" "consumer" {
   provider             = aws.consumer
   cidr_block           = var.consumer_vpc_cidr
@@ -77,6 +101,28 @@ resource "aws_security_group" "client_sg" {
   name        = "client-instance-sg"
   description = "Allows outbound traffic for Lattice HTTP/HTTPS requests"
   vpc_id      = aws_vpc.consumer.id
+
+  # This SG doubles as consumer_vpc_association's security_group_ids in
+  # lattice_network.tf - that association's enforcement point isn't a normal
+  # stateful EC2 ENI, so return traffic from VPC Lattice needs an explicit
+  # ingress rule or the client's TCP connections hang waiting for a SYN-ACK
+  # that gets silently dropped. Mirror of the ingress rules on
+  # order_app_sg/payment_app_sg below (same prefix lists, their port 80).
+  ingress {
+    description     = "Allow VPC Lattice HTTPS return traffic (IPv4)"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.vpc_lattice_ipv4_consumer.id]
+  }
+
+  ingress {
+    description     = "Allow VPC Lattice HTTPS return traffic (IPv6)"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.vpc_lattice_ipv6_consumer.id]
+  }
 
   # Allow all outbound (outbound traffic to VPC Lattice relies on standard routing table lookup,
   # but security groups must allow outbound to any address, as DNS resolves to link-local addresses).
@@ -152,9 +198,8 @@ resource "aws_route_table_association" "order_public" {
   route_table_id = aws_route_table.order_public.id
 }
 
-# The Target SG must allow port 80/443 from AWS Lattice Managed IP ranges:
-# IPv4: 169.254.171.0/24
-# IPv6: fc00:ec2:80::/64
+# The Target SG must allow port 80/443 from AWS's managed VPC Lattice prefix
+# lists (data.aws_ec2_managed_prefix_list.vpc_lattice_*_provider above).
 # Also require local VPC routing for health checks.
 resource "aws_security_group" "order_app_sg" {
   provider    = aws.provider
@@ -163,19 +208,19 @@ resource "aws_security_group" "order_app_sg" {
   vpc_id      = aws_vpc.order.id
 
   ingress {
-    description = "Allow IPv4 VPC Lattice HTTP traffic"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["169.254.171.0/24"]
+    description     = "Allow IPv4 VPC Lattice HTTP traffic"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.vpc_lattice_ipv4_provider.id]
   }
 
   ingress {
-    description      = "Allow IPv6 VPC Lattice HTTP traffic"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    ipv6_cidr_blocks = ["fc00:ec2:80::/64"]
+    description     = "Allow IPv6 VPC Lattice HTTP traffic"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.vpc_lattice_ipv6_provider.id]
   }
 
   egress {
@@ -256,19 +301,19 @@ resource "aws_security_group" "payment_app_sg" {
   vpc_id      = aws_vpc.payment.id
 
   ingress {
-    description = "Allow IPv4 VPC Lattice HTTP traffic"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["169.254.171.0/24"]
+    description     = "Allow IPv4 VPC Lattice HTTP traffic"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.vpc_lattice_ipv4_provider.id]
   }
 
   ingress {
-    description      = "Allow IPv6 VPC Lattice HTTP traffic"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    ipv6_cidr_blocks = ["fc00:ec2:80::/64"]
+    description     = "Allow IPv6 VPC Lattice HTTP traffic"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.vpc_lattice_ipv6_provider.id]
   }
 
   egress {

@@ -89,3 +89,18 @@ output "payments_v1_target_group_id" {
   description = "The Payments v1 (EC2/IP) target group ID"
   value       = aws_vpclattice_target_group.payments_v1.id
 }
+
+output "consumer_vpc_association_id" {
+  description = "The cross-account Consumer VPC <-> Service Network association ID (for AWS Support cases, aws vpc-lattice get-service-network-vpc-association, etc.)"
+  value       = aws_vpclattice_service_network_vpc_association.consumer_vpc_association.id
+}
+
+output "order_vpc_association_id" {
+  description = "The (same-account) Order VPC <-> Service Network association ID"
+  value       = aws_vpclattice_service_network_vpc_association.order_vpc_association.id
+}
+
+output "payment_vpc_association_id" {
+  description = "The (same-account) Payment VPC <-> Service Network association ID"
+  value       = aws_vpclattice_service_network_vpc_association.payment_vpc_association.id
+}
