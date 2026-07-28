@@ -11,6 +11,7 @@ An interactive learning tool for **AWS VPC Lattice** — multi-account/multi-VPC
   - [Lattice vs. PrivateLink](#lattice-vs-privatelink)
 - [IAM-Based Authentication & SigV4 Signing](#iam-based-authentication--sigv4-signing)
 - [AWS CLI Reference](#aws-cli-reference)
+- [Makefile Reference](#makefile-reference)
 
 ## Simulator vs. real deployment
 
@@ -22,7 +23,7 @@ An interactive learning tool for **AWS VPC Lattice** — multi-account/multi-VPC
 | What happens under the hood | All "traffic," logs, and IAM policy evaluation are simulated client-side from static data in `src/data/` — no backend, no live AWS calls | Real VPCs, a real VPC Lattice service network, real EC2/Lambda targets, real cross-account RAM sharing, and real SigV4-authenticated HTTP requests |
 | Get started | `npm install && npm run dev` (below) | [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md) |
 
-They mirror each other conceptually — same topology, same auth policies, same canary weights — but are otherwise independent: the app never shells out to Terraform or AWS, and deploying the real stack doesn't require running the app at all. **If you just want to poke at Lattice concepts for free, use the browser simulator below. If you want a real, hands-on 2-account Lattice service network you can `curl` against, go straight to [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md)** — it also has a `Makefile` (see [AWS CLI Reference](#aws-cli-reference)) for driving that real stack without hand-typing ARNs.
+They mirror each other conceptually — same topology, same auth policies, same canary weights — but are otherwise independent: the app never shells out to Terraform or AWS, and deploying the real stack doesn't require running the app at all. **If you just want to poke at Lattice concepts for free, use the browser simulator below. If you want a real, hands-on 2-account Lattice service network you can `curl` against, go straight to [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md)** — it also has a `Makefile` (see [Makefile Reference](#makefile-reference)) for driving that real stack without hand-typing ARNs.
 
 ## Features
 
@@ -83,7 +84,7 @@ The **Terraform Blueprints** tab (backed by `terraform/`) illustrates:
 - **Microservice targets**: IP targets (ECS/Fargate) and serverless targets (Lambda) behind weighted canary rules.
 - **Cross-account sharing**: AWS RAM (Resource Access Manager) to link VPCs to the service network.
 
-> ⚠️ **This Terraform is real, cost-bearing infrastructure**, not just illustrative — it's genuinely `terraform apply`-able against two AWS accounts (variable defaults are placeholder account IDs; real ones go in a gitignored `terraform.tfvars`). Running it costs roughly **$0.08–0.10/hour**. See [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md) for setup, cost breakdown, a usage walkthrough, the `Makefile` shortcuts, and the `terraform destroy` step — don't leave it running.
+> ⚠️ **This Terraform is real, cost-bearing infrastructure**, not just illustrative — it's genuinely `terraform apply`-able against two AWS accounts (variable defaults are placeholder account IDs; real ones go in a gitignored `terraform.tfvars`). Running it costs roughly **$0.08–0.10/hour**. See [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md) for setup, cost breakdown, a usage walkthrough, and the `terraform destroy` step — don't leave it running. Once deployed, drive it via the [Makefile Reference](#makefile-reference) below instead of hand-typing commands.
 
 ### Lattice vs. PrivateLink
 
@@ -166,4 +167,50 @@ curl -H "Host: orders.corp.internal" \
 
 None of the IDs above are real — this is a reference for learning the CLI surface area, not something to run as-is.
 
-If you want to run the real equivalents against an actually-deployed stack, the repo-root `Makefile` wraps them for you: `make network`, `make services`, `make weights`, `make demo-canary N=30`, and more, all resolving real ARNs/IDs via `terraform output` instead of hand-pasted placeholders. See [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md#makefile-shortcuts) — requires the Terraform stack from the table at the top of this README to be deployed first.
+If you want to run the real equivalents against an actually-deployed stack, see the [Makefile Reference](#makefile-reference) below.
+
+---
+
+## Makefile Reference
+
+The `Makefile` at the repo root drives the real, deployed stack — every target is a real `terraform`/`aws vpc-lattice`/`aws ram`/`aws ssm` call, with IDs/ARNs resolved live via `terraform output` instead of hand-pasted placeholders. Requires the Terraform stack from [Simulator vs. real deployment](#simulator-vs-real-deployment) to be deployed first — see [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md). Run `make help` from the repo root to print this same list from the Makefile itself.
+
+**Terraform lifecycle**
+
+| Target | What it does |
+|---|---|
+| `make init` | `terraform init` |
+| `make plan` | `terraform plan` |
+| `make apply` | `terraform apply` — real, cost-bearing AWS resources, see [terraform/DEPLOYING.md#cost](terraform/DEPLOYING.md#cost) |
+| `make destroy` | `terraform destroy` — tears down both accounts' resources |
+| `make outputs` | Print all terraform outputs |
+
+**Inspect the live stack** — read-only, safe to run anytime post-apply
+
+| Target | What it does |
+|---|---|
+| `make network` | Describe the Service Network (auth type, associations) |
+| `make services` | List services associated with the Service Network |
+| `make orders` | Describe the Orders service |
+| `make payments` | Describe the Payments service |
+| `make target-groups` | List all target groups in the provider account |
+| `make orders-health` | Health-check status of the Orders v1 (EC2) target |
+| `make payments-health` | Health-check status of the Payments v1 (EC2) target |
+| `make weights` | Show the Orders listener's current v1/v2 canary weight split |
+| `make ram-share` | Show the cross-account RAM resource share status |
+| `make status` | Runs `network` + `services` + `weights` + both health checks together |
+
+**Drive real traffic / mutate the live stack**
+
+| Target | What it does |
+|---|---|
+| `make connect` | Open an interactive SSM session on the client instance |
+| `make demo-orders` | Invoke Orders with the client's own role via SSM — expect HTTP 200 |
+| `make demo-payments-denied` | Invoke Payments with the client's own role via SSM — expect HTTP 403 |
+| `make demo-payments-allowed` | Invoke Payments after assuming `FinanceServiceRole` via SSM — expect HTTP 200 |
+| `make demo-canary N=30` | Sample the Orders listener N times via SSM and tally v1 vs v2 (`N` defaults to 20) |
+| `make shift-canary W1=50 W2=50` | Retarget Orders weights live via `update-listener` — **warning:** drifts from Terraform state until the next apply |
+
+`make demo-*` is the non-interactive equivalent of the manual SSM-session walkthrough in [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md#try-it-out) — same scripts, run over SSM RunCommand instead of an interactive session, output printed straight to your terminal. `make shift-canary` mutates the live listener directly, outside of Terraform — useful for playing with the split live, but it'll show as drift in the next `terraform plan` until either `lattice_services.tf` is updated to match or you re-apply to reset it.
+
+Every target reads `REGION`/`CONSUMER_PROFILE`/`PROVIDER_PROFILE` from `terraform output` (falling back to the `terraform.tfvars.example` defaults if nothing's deployed yet); override any of them per-invocation, e.g. `make network PROVIDER_PROFILE=my-other-profile`.
