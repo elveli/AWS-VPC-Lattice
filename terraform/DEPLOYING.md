@@ -46,7 +46,7 @@ Verified against AWS's current pricing pages (July 2026), region `us-east-1`:
 | VPC Lattice data processed | $0.025/GB | negligible for manual testing | ~$0.000 |
 | Internet Gateway | free (no NAT Gateway used) | 3 | $0.000 |
 
-**Total: roughly $0.08–0.10/hour.** A several-hour learning session should land well under $1. Every resource is tagged `Ephemeral = "true"` and `Project = "VPC-Lattice-Showcase"` so it's easy to filter in Cost Explorer or the console if you want to double-check. Pricing can change or vary by region — see the [VPC Lattice pricing page](https://aws.amazon.com/vpc/lattice/pricing/) and [EC2 pricing page](https://aws.amazon.com/ec2/pricing/on-demand/) for current numbers.
+**Total: roughly $0.08–0.10/hour.** A several-hour learning session should land well under $1. Every resource is tagged `Ephemeral = "true"` and `Project = "VPC-Lattice-Showcase"` so it's easy to filter in Cost Explorer or the console if you want to double-check — or run `make inventory` (see the [README's Makefile Reference](../README.md#makefile-reference)) to list every tagged resource in both accounts from the command line. Pricing can change or vary by region — see the [VPC Lattice pricing page](https://aws.amazon.com/vpc/lattice/pricing/) and [EC2 pricing page](https://aws.amazon.com/ec2/pricing/on-demand/) for current numbers.
 
 ## Try it out
 

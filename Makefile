@@ -38,7 +38,7 @@ PROVIDER_PROFILE = $(shell out=$$($(TF) output -raw provider_profile 2>/dev/null
 
 .PHONY: help init plan apply destroy outputs \
         network services orders payments target-groups \
-        orders-health payments-health weights shift-canary ram-share status \
+        orders-health payments-health weights shift-canary ram-share status inventory \
         connect demo-orders demo-payments-denied demo-payments-allowed demo-canary
 
 help: ## Show this help
@@ -46,7 +46,7 @@ help: ## Show this help
 	@grep -E '^(init|plan|apply|destroy|outputs):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Inspect the live stack (read-only aws vpc-lattice/ram calls):"
-	@grep -E '^(network|services|orders|payments|target-groups|orders-health|payments-health|weights|ram-share|status):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(network|services|orders|payments|target-groups|orders-health|payments-health|weights|ram-share|status|inventory):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Drive real traffic / mutate the live stack:"
 	@grep -E '^(connect|demo-orders|demo-payments-denied|demo-payments-allowed|demo-canary|shift-canary):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
@@ -121,6 +121,23 @@ ram-share: ## Show the cross-account RAM resource share status
 	  --resource-owner SELF --name vpc-lattice-shared-service-network
 
 status: network services weights orders-health payments-health ## Run network+services+weights+health checks together
+
+# Every resource gets Project=VPC-Lattice-Showcase / Ephemeral=true from each
+# provider's default_tags (see providers.tf) — the tag Resource Groups Tagging
+# API query below is a single cross-service call per account, so it catches
+# VPCs/subnets/EC2/IAM/Lambda/VPC Lattice resources alike, not just Lattice.
+inventory: ## List every tagged AWS resource in both accounts (Project=VPC-Lattice-Showcase)
+	@echo "=== Consumer account ($(CONSUMER_PROFILE)) ==="
+	@aws resourcegroupstaggingapi get-resources \
+	  --profile $(CONSUMER_PROFILE) --region $(REGION) \
+	  --tag-filters Key=Project,Values=VPC-Lattice-Showcase \
+	  --query 'ResourceTagMappingList[].ResourceARN' --output table
+	@echo ""
+	@echo "=== Provider account ($(PROVIDER_PROFILE)) ==="
+	@aws resourcegroupstaggingapi get-resources \
+	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
+	  --tag-filters Key=Project,Values=VPC-Lattice-Showcase \
+	  --query 'ResourceTagMappingList[].ResourceARN' --output table
 
 # ------------------------------------------------------------------------------
 # Drive real traffic / mutate the live stack

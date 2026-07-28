@@ -165,9 +165,12 @@ resource "aws_vpclattice_listener" "orders" {
 
 # Dynamic Path rule on Orders: Route all `/v2/*` requests strictly to Lambda (Orders v2)
 resource "aws_vpclattice_listener_rule" "orders_v2_path_rule" {
-  provider            = aws.provider
-  name                = "orders-v2-path-rule"
-  listener_identifier = aws_vpclattice_listener.orders.id
+  provider = aws.provider
+  name     = "orders-v2-path-rule"
+  # NOT aws_vpclattice_listener.orders.id — that's the composite
+  # "service_id/listener_id" Terraform uses for import, which the API's
+  # listenerIdentifier regex rejects. listener_id is the plain listener ID.
+  listener_identifier = aws_vpclattice_listener.orders.listener_id
   service_identifier  = aws_vpclattice_service.orders.id
   priority            = 10
 
@@ -253,6 +256,13 @@ resource "aws_vpclattice_auth_policy" "orders_svc_auth" {
 resource "aws_vpclattice_auth_policy" "payments_svc_auth" {
   provider            = aws.provider
   resource_identifier = aws_vpclattice_service.payments.arn
+
+  # IAM is eventually consistent: PutAuthPolicy validates that the Principal
+  # role actually exists, and a role created moments ago in another account
+  # can still 400 with "Policy principal is not found" without this wait —
+  # see aws_iam_role.finance_service in compute.tf and time_sleep below.
+  depends_on = [time_sleep.finance_role_propagation]
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -260,7 +270,7 @@ resource "aws_vpclattice_auth_policy" "payments_svc_auth" {
         Sid    = "RestrictPaymentsToFinanceRoleOnly"
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${var.consumer_account_id}:role/FinanceServiceRole"
+          AWS = aws_iam_role.finance_service.arn
         }
         Action   = "vpc-lattice-svcs:Invoke"
         Resource = aws_vpclattice_service.payments.arn

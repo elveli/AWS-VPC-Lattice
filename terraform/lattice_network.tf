@@ -101,23 +101,33 @@ resource "aws_ram_principal_association" "consumer_account_association" {
   resource_share_arn = aws_ram_resource_share.lattice_share.arn
 }
 
+# These two accounts aren't assumed to be in the same AWS Organization, so the
+# invitation RAM sends the consumer account isn't auto-accepted — without this,
+# the service network stays invisible from the consumer side and
+# consumer_vpc_association below fails with ResourceNotFoundException.
+resource "aws_ram_resource_share_accepter" "consumer_accept" {
+  provider  = aws.consumer
+  share_arn = aws_ram_resource_share.lattice_share.arn
 
-# ==============================================================================
-# 5. ASSOCIATE CONSUMER VPC TO THE SHARED SERVICE NETWORK (Account A)
-# In real life, RAM invitation must be accepted. Once shared, Consumer VPC (Account A)
-# can link directly to the Service Network ARN.
-# ==============================================================================
-resource "aws_vpclattice_service_network_vpc_association" "consumer_vpc_association" {
-  provider       = aws.consumer
-  vpc_identifier = aws_vpc.consumer.id
-  # References the service network ID owned by Account B
-  service_network_identifier = aws_vpclattice_service_network.prod_network.id
-  security_group_ids         = [aws_security_group.client_sg.id]
-
-  # Make sure the RAM share registration has run first
   depends_on = [
     aws_ram_principal_association.consumer_account_association,
     aws_ram_resource_association.lattice_network_association
+  ]
+}
+
+# ==============================================================================
+# 5. ASSOCIATE CONSUMER VPC TO THE SHARED SERVICE NETWORK (Account A)
+# Once the invitation above is accepted, Consumer VPC (Account A) can link
+# directly to the Service Network ID owned by Account B.
+# ==============================================================================
+resource "aws_vpclattice_service_network_vpc_association" "consumer_vpc_association" {
+  provider                   = aws.consumer
+  vpc_identifier             = aws_vpc.consumer.id
+  service_network_identifier = aws_vpclattice_service_network.prod_network.id
+  security_group_ids         = [aws_security_group.client_sg.id]
+
+  depends_on = [
+    aws_ram_resource_share_accepter.consumer_accept
   ]
 
   tags = {

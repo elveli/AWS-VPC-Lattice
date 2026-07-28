@@ -199,6 +199,7 @@ The `Makefile` at the repo root drives the real, deployed stack — every target
 | `make weights` | Show the Orders listener's current v1/v2 canary weight split |
 | `make ram-share` | Show the cross-account RAM resource share status |
 | `make status` | Runs `network` + `services` + `weights` + both health checks together |
+| `make inventory` | List every tagged AWS resource in both accounts (`Project=VPC-Lattice-Showcase`), via the Resource Groups Tagging API |
 
 **Drive real traffic / mutate the live stack**
 

@@ -75,11 +75,10 @@ resource "aws_iam_instance_profile" "client" {
   role     = aws_iam_role.client.name
 }
 
-# Named FinanceServiceRole to match the ARN that lattice_services.tf's
-# payments_svc_auth policy already grants Invoke to - only assumable by
-# client_role, and only allowed to call Payments. Demonstrates the same
-# allow/deny + assumed-role mechanics the in-app IAM Policy Lab simulates,
-# but against a real IAM role.
+# Named FinanceServiceRole that lattice_services.tf's payments_svc_auth policy
+# grants Invoke to - only assumable by client_role, and only allowed to call
+# Payments. Demonstrates the same allow/deny + assumed-role mechanics the
+# in-app IAM Policy Lab simulates, but against a real IAM role.
 resource "aws_iam_role" "finance_service" {
   provider = aws.consumer
   name     = "FinanceServiceRole"
@@ -94,6 +93,14 @@ resource "aws_iam_role" "finance_service" {
   })
 
   tags = { Name = "Finance-Service-Role" }
+}
+
+# IAM is eventually consistent across accounts/services - VPC Lattice's
+# PutAuthPolicy (payments_svc_auth in lattice_services.tf) validates that its
+# Principal role exists, which can 400 immediately after this role is created.
+resource "time_sleep" "finance_role_propagation" {
+  depends_on      = [aws_iam_role.finance_service]
+  create_duration = "10s"
 }
 
 resource "aws_iam_role_policy" "finance_invoke_payments" {

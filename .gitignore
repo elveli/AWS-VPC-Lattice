@@ -18,5 +18,5 @@ terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.*
 terraform/terraform.tfvars
-terraform/*.zip
+terraform/**/*.zip
 terraform/crash.log

@@ -72,7 +72,7 @@ output "provider_profile" {
 
 output "orders_listener_id" {
   description = "The Orders service's listener ID (for inspecting/adjusting canary weights)"
-  value       = aws_vpclattice_listener.orders.id
+  value       = aws_vpclattice_listener.orders.listener_id
 }
 
 output "orders_v1_target_group_id" {
