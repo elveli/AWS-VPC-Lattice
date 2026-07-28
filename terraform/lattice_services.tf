@@ -9,10 +9,12 @@
 
 # Service A: Orders Microservice
 resource "aws_vpclattice_service" "orders" {
-  provider           = aws.provider
-  name               = "orders-service"
-  auth_type          = "AWS_IAM" # Double down on IAM (SigV4) authentication at the Service level
-  custom_domain_name = "orders.corp.internal"
+  provider  = aws.provider
+  name      = "orders-service"
+  auth_type = "AWS_IAM" # Double down on IAM (SigV4) authentication at the Service level
+
+  # No custom_domain_name: that requires an ACM certificate for a domain we
+  # don't own. Use the auto-generated Lattice DNS name (see outputs.tf) instead.
 
   tags = {
     Name = "Orders-Service"
@@ -21,10 +23,9 @@ resource "aws_vpclattice_service" "orders" {
 
 # Service B: Payments Microservice
 resource "aws_vpclattice_service" "payments" {
-  provider           = aws.provider
-  name               = "payments-service"
-  auth_type          = "AWS_IAM"
-  custom_domain_name = "payments.corp.internal"
+  provider  = aws.provider
+  name      = "payments-service"
+  auth_type = "AWS_IAM"
 
   tags = {
     Name = "Payments-Service"
@@ -130,12 +131,17 @@ resource "aws_vpclattice_target_group" "payments_v1" {
 # Configures Weighted / Blue-Green Canary routing and Path Matches
 # ------------------------------------------------------------------------------
 
-# Listener on Orders: Port 80
+# Listener on Orders: Port 443 (HTTPS)
+# AWS_IAM-authenticated services must be called over TLS (every AWS SigV4
+# client example signs and sends over https://). No custom domain is set, so
+# VPC Lattice auto-provisions and manages the TLS cert for the generated FQDN
+# — no certificate_arn needed here. Lattice terminates TLS and still forwards
+# to the target groups over plain HTTP:80, so the target-side config is unchanged.
 resource "aws_vpclattice_listener" "orders" {
   provider           = aws.provider
   name               = "orders-listener"
-  port               = 80
-  protocol           = "HTTP"
+  port               = 443
+  protocol           = "HTTPS"
   service_identifier = aws_vpclattice_service.orders.id
 
   # Default action: 90/10 split between v1 (Containers) and v2 (Lambda Serverless)
@@ -190,12 +196,12 @@ resource "aws_vpclattice_listener_rule" "orders_v2_path_rule" {
   }
 }
 
-# Listener on Payments: Port 80
+# Listener on Payments: Port 443 (HTTPS) — see note on the Orders listener above.
 resource "aws_vpclattice_listener" "payments" {
   provider           = aws.provider
   name               = "payments-listener"
-  port               = 80
-  protocol           = "HTTP"
+  port               = 443
+  protocol           = "HTTPS"
   service_identifier = aws_vpclattice_service.payments.id
 
   default_action {

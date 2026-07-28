@@ -1,6 +1,18 @@
 # AWS VPC Lattice Simulator
 
-An interactive, in-browser simulator and learning tool for **AWS VPC Lattice** — multi-account/multi-VPC service networking, SigV4 IAM authorization, and weighted canary routing. It's a static React app: there's no backend and no live AWS calls. All traffic, logs, and policy evaluation are simulated client-side so you can explore Lattice behavior without an AWS account.
+An interactive learning tool for **AWS VPC Lattice** — multi-account/multi-VPC service networking, SigV4 IAM authorization, and weighted canary routing — with two genuinely different ways to explore it from this one repo.
+
+## Simulator vs. real deployment
+
+| | **Browser simulator** (this app, `src/`) | **Real AWS deployment** (`terraform/`) |
+|---|---|---|
+| What it is | A static React app | Actual Terraform-provisioned AWS infrastructure |
+| AWS account needed? | No | Yes — two accounts + local AWS CLI profiles |
+| Cost | $0 | ~$0.08–0.10/hour while it's running |
+| What happens under the hood | All "traffic," logs, and IAM policy evaluation are simulated client-side from static data in `src/data/` — no backend, no live AWS calls | Real VPCs, a real VPC Lattice service network, real EC2/Lambda targets, real cross-account RAM sharing, and real SigV4-authenticated HTTP requests |
+| Get started | `npm install && npm run dev` (below) | [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md) |
+
+They mirror each other conceptually — same topology, same auth policies, same canary weights — but are otherwise independent: the app never shells out to Terraform or AWS, and deploying the real stack doesn't require running the app at all. **If you just want to poke at Lattice concepts for free, use the browser simulator below. If you want a real, hands-on 2-account Lattice service network you can `curl` against, go straight to [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md)** — it also has a `Makefile` (see [AWS CLI Reference](#aws-cli-reference)) for driving that real stack without hand-typing ARNs.
 
 ## Features
 
@@ -61,7 +73,7 @@ The **Terraform Blueprints** tab (backed by `terraform/`) illustrates:
 - **Microservice targets**: IP targets (ECS/Fargate) and serverless targets (Lambda) behind weighted canary rules.
 - **Cross-account sharing**: AWS RAM (Resource Access Manager) to link VPCs to the service network.
 
-> ⚠️ **This Terraform is illustrative, not deploy-ready.** It uses placeholder account IDs (`111111111111` / `222222222222`), has no remote backend/state configuration, and is intended to be read alongside the simulator — not applied to a real AWS account as-is. If you want to adapt it for real use, review every resource, wire up real account IDs/roles, and add a backend config first.
+> ⚠️ **This Terraform is real, cost-bearing infrastructure**, not just illustrative — it's genuinely `terraform apply`-able against two AWS accounts (variable defaults are placeholder account IDs; real ones go in a gitignored `terraform.tfvars`). Running it costs roughly **$0.08–0.10/hour**. See [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md) for setup, cost breakdown, a usage walkthrough, the `Makefile` shortcuts, and the `terraform destroy` step — don't leave it running.
 
 ### Lattice vs. PrivateLink
 
@@ -142,4 +154,6 @@ curl -H "Host: orders.corp.internal" \
      http://orders-service-y01ab2c34d.vpc-lattice.us-east-1.on.aws/orders
 ```
 
-If you want to run these against a real AWS account, you'll need your own actual Lattice service network, services, and IAM credentials — none of the IDs above are real.
+None of the IDs above are real — this is a reference for learning the CLI surface area, not something to run as-is.
+
+If you want to run the real equivalents against an actually-deployed stack, the repo-root `Makefile` wraps them for you: `make network`, `make services`, `make weights`, `make demo-canary N=30`, and more, all resolving real ARNs/IDs via `terraform output` instead of hand-pasted placeholders. See [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md#makefile-shortcuts) — requires the Terraform stack from the table at the top of this README to be deployed first.

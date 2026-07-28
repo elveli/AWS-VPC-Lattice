@@ -1,0 +1,16 @@
+# Copy this file to terraform.tfvars (gitignored) and fill in your real values.
+# terraform.tfvars is never committed - keep real account IDs out of version control.
+
+# Real AWS account IDs for your two accounts (replace the placeholders).
+consumer_account_id = "111111111111"
+provider_account_id = "222222222222"
+
+# Names of the local AWS CLI profiles you configured for each account, e.g.:
+#   aws configure --profile consumer
+#   aws configure --profile provider
+consumer_profile = "consumer"
+provider_profile = "provider"
+
+# Optional overrides
+# aws_region    = "us-east-1"
+# instance_type = "t3.micro"

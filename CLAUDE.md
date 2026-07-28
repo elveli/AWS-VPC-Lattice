@@ -2,7 +2,7 @@
 
 ## Project
 
-An interactive, client-only simulator for AWS VPC Lattice: multi-VPC/multi-account service networking, SigV4 IAM auth, and weighted canary routing. There is no backend — all "traffic," logs, and policy evaluation are simulated client-side from static data in `src/data/`. The Terraform under `terraform/` is reference/illustrative content rendered in-app (via `TerraformViewer`); it uses placeholder account IDs and is not meant to be `terraform apply`'d as-is.
+An interactive, client-only simulator for AWS VPC Lattice: multi-VPC/multi-account service networking, SigV4 IAM auth, and weighted canary routing. There is no backend — all "traffic," logs, and policy evaluation are simulated client-side from static data in `src/data/`. The Terraform under `terraform/` is rendered in-app (via `TerraformViewer`) as reference content, but it is also genuinely `terraform apply`-able against two real AWS accounts as a real, cost-bearing, ephemeral learning stack — see [terraform/DEPLOYING.md](terraform/DEPLOYING.md). Its variable *defaults* stay as placeholder account IDs (`111111111111` / `222222222222`) for the illustrative/in-app reading path; real account IDs for an actual deploy go in a gitignored `terraform.tfvars`, never committed. Changes to `src/data/terraformBlueprints.ts` (the in-app copy) and the files under `terraform/` (the deployable copy) are not kept in sync automatically — update both if you touch one.
 
 ## Stack
 
@@ -23,6 +23,7 @@ React 19 + TypeScript, Vite 6, Tailwind CSS v4 (via `@tailwindcss/vite`), `lucid
 - [src/components/TerraformViewer.tsx](src/components/TerraformViewer.tsx) — renders the static blueprints from `src/data/terraformBlueprints.ts` (mirrors the files under `terraform/`).
 - [src/components/CLITerminal.tsx](src/components/CLITerminal.tsx) — renders canned AWS CLI command/output pairs from `src/data/cliCommands.ts`.
 - [src/types.ts](src/types.ts) — shared types: `SimulationConfig`, `LogEntry`, `CliCommand`, `TerraformFile`.
+- [Makefile](Makefile) — repo-root wrapper around the Terraform lifecycle plus real `aws vpc-lattice`/`ram`/`ssm` calls against an actually-deployed stack (`terraform -chdir=terraform`, IDs/ARNs resolved live via `terraform output`); this is the deployable path's analog of the in-app AWS CLI Playbook, not something the app itself calls.
 
 ## Conventions
 

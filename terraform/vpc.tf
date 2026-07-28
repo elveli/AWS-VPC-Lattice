@@ -23,15 +23,52 @@ resource "aws_vpc" "consumer" {
 }
 
 resource "aws_subnet" "consumer_subnets" {
-  provider          = aws.consumer
-  count             = 2
-  vpc_id            = aws_vpc.consumer.id
-  cidr_block        = cidrsubnet(var.consumer_vpc_cidr, 8, count.index)
-  availability_zone = "${var.aws_region}${count.index == 0 ? "a" : "b"}"
+  provider                = aws.consumer
+  count                   = 2
+  vpc_id                  = aws_vpc.consumer.id
+  cidr_block              = cidrsubnet(var.consumer_vpc_cidr, 8, count.index)
+  availability_zone       = "${var.aws_region}${count.index == 0 ? "a" : "b"}"
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "Consumer-Subnet-${count.index}"
   }
+}
+
+# No NAT Gateway: the client instance gets a public IP behind an Internet
+# Gateway purely for outbound SSM/package-manager traffic (cost avoidance —
+# NAT Gateway's hourly + per-GB charge is unnecessary for this learning stack).
+resource "aws_internet_gateway" "consumer" {
+  provider = aws.consumer
+  vpc_id   = aws_vpc.consumer.id
+
+  tags = {
+    Name = "Consumer-IGW"
+  }
+}
+
+resource "aws_route_table" "consumer_public" {
+  provider = aws.consumer
+  vpc_id   = aws_vpc.consumer.id
+
+  # IPv4 only: these VPCs don't have an Amazon-provided IPv6 CIDR block
+  # associated, so there's no IPv6 target to route (the security groups'
+  # IPv6 rules are opportunistic/no-op without one).
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.consumer.id
+  }
+
+  tags = {
+    Name = "Consumer-Public-RT"
+  }
+}
+
+resource "aws_route_table_association" "consumer_public" {
+  provider       = aws.consumer
+  count          = length(aws_subnet.consumer_subnets)
+  subnet_id      = aws_subnet.consumer_subnets[count.index].id
+  route_table_id = aws_route_table.consumer_public.id
 }
 
 # Security group on the client EC2 instance in the Consumer VPC
@@ -73,15 +110,46 @@ resource "aws_vpc" "order" {
 }
 
 resource "aws_subnet" "order_subnets" {
-  provider          = aws.provider
-  count             = 2
-  vpc_id            = aws_vpc.order.id
-  cidr_block        = cidrsubnet(var.order_service_vpc_cidr, 8, count.index)
-  availability_zone = "${var.aws_region}${count.index == 0 ? "a" : "b"}"
+  provider                = aws.provider
+  count                   = 2
+  vpc_id                  = aws_vpc.order.id
+  cidr_block              = cidrsubnet(var.order_service_vpc_cidr, 8, count.index)
+  availability_zone       = "${var.aws_region}${count.index == 0 ? "a" : "b"}"
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "Order-Subnet-${count.index}"
   }
+}
+
+resource "aws_internet_gateway" "order" {
+  provider = aws.provider
+  vpc_id   = aws_vpc.order.id
+
+  tags = {
+    Name = "Order-IGW"
+  }
+}
+
+resource "aws_route_table" "order_public" {
+  provider = aws.provider
+  vpc_id   = aws_vpc.order.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.order.id
+  }
+
+  tags = {
+    Name = "Order-Public-RT"
+  }
+}
+
+resource "aws_route_table_association" "order_public" {
+  provider       = aws.provider
+  count          = length(aws_subnet.order_subnets)
+  subnet_id      = aws_subnet.order_subnets[count.index].id
+  route_table_id = aws_route_table.order_public.id
 }
 
 # The Target SG must allow port 80/443 from AWS Lattice Managed IP ranges:
@@ -139,15 +207,46 @@ resource "aws_vpc" "payment" {
 }
 
 resource "aws_subnet" "payment_subnets" {
-  provider          = aws.provider
-  count             = 2
-  vpc_id            = aws_vpc.payment.id
-  cidr_block        = cidrsubnet(var.payment_service_vpc_cidr, 8, count.index)
-  availability_zone = "${var.aws_region}${count.index == 0 ? "a" : "b"}"
+  provider                = aws.provider
+  count                   = 2
+  vpc_id                  = aws_vpc.payment.id
+  cidr_block              = cidrsubnet(var.payment_service_vpc_cidr, 8, count.index)
+  availability_zone       = "${var.aws_region}${count.index == 0 ? "a" : "b"}"
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "Payment-Subnet-${count.index}"
   }
+}
+
+resource "aws_internet_gateway" "payment" {
+  provider = aws.provider
+  vpc_id   = aws_vpc.payment.id
+
+  tags = {
+    Name = "Payment-IGW"
+  }
+}
+
+resource "aws_route_table" "payment_public" {
+  provider = aws.provider
+  vpc_id   = aws_vpc.payment.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.payment.id
+  }
+
+  tags = {
+    Name = "Payment-Public-RT"
+  }
+}
+
+resource "aws_route_table_association" "payment_public" {
+  provider       = aws.provider
+  count          = length(aws_subnet.payment_subnets)
+  subnet_id      = aws_subnet.payment_subnets[count.index].id
+  route_table_id = aws_route_table.payment_public.id
 }
 
 resource "aws_security_group" "payment_app_sg" {

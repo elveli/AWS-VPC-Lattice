@@ -20,6 +20,26 @@ variable "provider_account_id" {
   default     = "222222222222"
 }
 
+# --- Local AWS CLI profile names used to authenticate each provider block ---
+variable "consumer_profile" {
+  type        = string
+  description = "AWS CLI named profile with credentials for the Consumer account (Account A)"
+  default     = "consumer"
+}
+
+variable "provider_profile" {
+  type        = string
+  description = "AWS CLI named profile with credentials for the Provider account (Account B)"
+  default     = "provider"
+}
+
+# --- Compute sizing ---
+variable "instance_type" {
+  type        = string
+  description = "EC2 instance type for the demo client/target instances"
+  default     = "t3.micro"
+}
+
 # --- CIDR Blocks for separate isolation ---
 variable "consumer_vpc_cidr" {
   type        = string

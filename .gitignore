@@ -12,3 +12,11 @@ coverage/
 .idea/
 .env*
 !.env.example
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/*.zip
+terraform/crash.log
