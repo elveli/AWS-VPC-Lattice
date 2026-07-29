@@ -133,13 +133,13 @@ status: network services weights orders-health payments-health ## Run network+se
 # API query below is a single cross-service call per account, so it catches
 # VPCs/subnets/EC2/IAM/Lambda/VPC Lattice resources alike, not just Lattice.
 inventory: ## List every tagged AWS resource in both accounts (Project=VPC-Lattice-Showcase)
-	@echo "=== Consumer account ($(CONSUMER_PROFILE)) ==="
+	@echo "=== Consumer account ($(CONSUMER_PROFILE), $(CONSUMER_ACCOUNT_ID)) ==="
 	@aws resourcegroupstaggingapi get-resources \
 	  --profile $(CONSUMER_PROFILE) --region $(REGION) \
 	  --tag-filters Key=Project,Values=VPC-Lattice-Showcase \
 	  --query 'ResourceTagMappingList[].ResourceARN' --output table
 	@echo ""
-	@echo "=== Provider account ($(PROVIDER_PROFILE)) ==="
+	@echo "=== Provider account ($(PROVIDER_PROFILE), $(PROVIDER_ACCOUNT_ID)) ==="
 	@aws resourcegroupstaggingapi get-resources \
 	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
 	  --tag-filters Key=Project,Values=VPC-Lattice-Showcase \
