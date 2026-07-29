@@ -53,7 +53,7 @@ Verified against AWS's current pricing pages (July 2026), region `us-east-1`:
 After `apply` finishes, connect to the client instance via SSM (no SSH keys needed):
 
 ```
-terraform output connect_to_client   # prints the ready-to-run command
+terraform output -raw connect_to_client   # prints the ready-to-run command
 ```
 
 Once connected, the helper scripts in `/opt/lattice-demo/` are ready to go:
