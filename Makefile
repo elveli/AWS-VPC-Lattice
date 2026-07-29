@@ -38,7 +38,7 @@ PROVIDER_PROFILE = $(shell out=$$($(TF) output -raw provider_profile 2>/dev/null
 
 .PHONY: help init plan apply destroy outputs \
         network services orders payments target-groups \
-        orders-health payments-health weights shift-canary ram-share status inventory \
+        orders-health payments-health weights shift-canary ram-share status inventory ec2-status \
         connect demo-orders demo-payments-denied demo-payments-allowed demo-canary
 
 help: ## Show this help
@@ -46,7 +46,7 @@ help: ## Show this help
 	@grep -E '^(init|plan|apply|destroy|outputs):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Inspect the live stack (read-only aws vpc-lattice/ram calls):"
-	@grep -E '^(network|services|orders|payments|target-groups|orders-health|payments-health|weights|ram-share|status|inventory):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(network|services|orders|payments|target-groups|orders-health|payments-health|weights|ram-share|status|inventory|ec2-status):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Drive real traffic / mutate the live stack:"
 	@grep -E '^(connect|demo-orders|demo-payments-denied|demo-payments-allowed|demo-canary|shift-canary):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
@@ -138,6 +138,27 @@ inventory: ## List every tagged AWS resource in both accounts (Project=VPC-Latti
 	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
 	  --tag-filters Key=Project,Values=VPC-Lattice-Showcase \
 	  --query 'ResourceTagMappingList[].ResourceARN' --output table
+
+# Queried by tag, not by `terraform output` instance IDs - those go blank the
+# moment terraform destroy removes them from state, which is exactly when
+# you most want to confirm nothing's still running/shutting-down. AWS keeps
+# terminated instances visible in describe-instances for a while afterward,
+# so "State: terminated" here (not just an empty result) is the real
+# destroy-completed signal; an empty table means they've since aged out.
+ec2-status: ## Show Name/InstanceId/State for every tagged EC2 instance in both accounts - works after terraform destroy too
+	@echo "=== Consumer account ($(CONSUMER_PROFILE)) ==="
+	@aws ec2 describe-instances \
+	  --profile $(CONSUMER_PROFILE) --region $(REGION) \
+	  --filters "Name=tag:Project,Values=VPC-Lattice-Showcase" \
+	  --query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name}' \
+	  --output table
+	@echo ""
+	@echo "=== Provider account ($(PROVIDER_PROFILE)) ==="
+	@aws ec2 describe-instances \
+	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
+	  --filters "Name=tag:Project,Values=VPC-Lattice-Showcase" \
+	  --query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name}' \
+	  --output table
 
 # ------------------------------------------------------------------------------
 # Drive real traffic / mutate the live stack
