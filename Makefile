@@ -129,21 +129,33 @@ ram-share: ## Show the cross-account RAM resource share status
 status: network services weights orders-health payments-health ## Run network+services+weights+health checks together
 
 # Every resource gets Project=VPC-Lattice-Showcase / Ephemeral=true from each
-# provider's default_tags (see providers.tf) — the tag Resource Groups Tagging
-# API query below is a single cross-service call per account, so it catches
-# VPCs/subnets/EC2/IAM/Lambda/VPC Lattice resources alike, not just Lattice.
-inventory: ## List every tagged AWS resource in both accounts (Project=VPC-Lattice-Showcase)
-	@echo "=== Consumer account ($(CONSUMER_PROFILE), $(CONSUMER_ACCOUNT_ID)) ==="
-	@aws resourcegroupstaggingapi get-resources \
-	  --profile $(CONSUMER_PROFILE) --region $(REGION) \
-	  --tag-filters Key=Project,Values=VPC-Lattice-Showcase \
-	  --query 'ResourceTagMappingList[].ResourceARN' --output table
+# provider's default_tags (see providers.tf), so this catches VPCs/subnets/
+# EC2/IAM/Lambda/VPC Lattice resources alike - but the tagging API itself has
+# no generic status field (that's exactly why a DELETED RAM share can look
+# indistinguishable from a live one here), so STATUS below is a per-ARN
+# dispatch to each service's own status/state field for the types that
+# actually linger visibly after deletion; anything else just shows "-".
+define inventory-account
+	@echo "=== $(1) account ($(2), $(3)) ==="
+	@for arn in $$(aws resourcegroupstaggingapi get-resources \
+	    --profile $(2) --region $(REGION) \
+	    --tag-filters Key=Project,Values=VPC-Lattice-Showcase \
+	    --query 'ResourceTagMappingList[].ResourceARN' --output text); do \
+	  id=$${arn##*/}; \
+	  case "$$arn" in \
+	    *:ec2:*:instance/*) status=$$(aws ec2 describe-instances --profile $(2) --region $(REGION) --instance-ids "$$id" --query 'Reservations[0].Instances[0].State.Name' --output text 2>/dev/null) ;; \
+	    *:ec2:*:volume/*) status=$$(aws ec2 describe-volumes --profile $(2) --region $(REGION) --volume-ids "$$id" --query 'Volumes[0].State' --output text 2>/dev/null) ;; \
+	    *:ram:*:resource-share/*) status=$$(aws ram get-resource-shares --profile $(2) --region $(REGION) --resource-owner SELF --resource-share-arns "$$arn" --query 'resourceShares[0].status' --output text 2>/dev/null) ;; \
+	    *) status="-" ;; \
+	  esac; \
+	  printf "  %-20s %s\n" "$${status:--}" "$$arn"; \
+	done
+endef
+
+inventory: ## List every tagged AWS resource in both accounts with status where available (Project=VPC-Lattice-Showcase)
+	$(call inventory-account,Consumer,$(CONSUMER_PROFILE),$(CONSUMER_ACCOUNT_ID))
 	@echo ""
-	@echo "=== Provider account ($(PROVIDER_PROFILE), $(PROVIDER_ACCOUNT_ID)) ==="
-	@aws resourcegroupstaggingapi get-resources \
-	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
-	  --tag-filters Key=Project,Values=VPC-Lattice-Showcase \
-	  --query 'ResourceTagMappingList[].ResourceARN' --output table
+	$(call inventory-account,Provider,$(PROVIDER_PROFILE),$(PROVIDER_ACCOUNT_ID))
 
 # Queried by tag, not by `terraform output` instance IDs - those go blank the
 # moment terraform destroy removes them from state, which is exactly when
