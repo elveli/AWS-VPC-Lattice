@@ -20,7 +20,22 @@ DNS names) is real output from the live stack.
 > control plane below is a legitimate, accurate picture of what's provisioned; it just isn't evidence
 > that `make demo-orders` et al. will get an HTTP response on top of it.
 
-## `make network`
+## Contents
+
+- [`make network`](#make-network)
+- [`make services`](#make-services)
+- [`make orders`](#make-orders)
+- [`make payments`](#make-payments)
+- [`make target-groups`](#make-target-groups)
+- [`make orders-health`](#make-orders-health)
+- [`make payments-health`](#make-payments-health)
+- [`make weights`](#make-weights)
+- [`make ram-share`](#make-ram-share)
+- [`make status`](#make-status)
+- [`make inventory`](#make-inventory)
+- [`make ec2-status`](#make-ec2-status)
+
+### `make network`
 
 Describe the Service Network (auth type, associations)
 
@@ -43,7 +58,7 @@ aws vpc-lattice get-service-network \
 }
 ```
 
-## `make services`
+### `make services`
 
 List services associated with the Service Network
 
@@ -91,7 +106,7 @@ aws vpc-lattice list-service-network-service-associations \
 }
 ```
 
-## `make orders`
+### `make orders`
 
 Describe the Orders service
 
@@ -114,7 +129,7 @@ aws vpc-lattice get-service \
 }
 ```
 
-## `make payments`
+### `make payments`
 
 Describe the Payments service
 
@@ -137,7 +152,7 @@ aws vpc-lattice get-service \
 }
 ```
 
-## `make target-groups`
+### `make target-groups`
 
 List all target groups in the provider account
 
@@ -195,7 +210,7 @@ aws vpc-lattice list-target-groups \
 }
 ```
 
-## `make orders-health`
+### `make orders-health`
 
 Health-check status of the Orders v1 (EC2) target
 
@@ -214,7 +229,7 @@ aws vpc-lattice list-targets \
 }
 ```
 
-## `make payments-health`
+### `make payments-health`
 
 Health-check status of the Payments v1 (EC2) target
 
@@ -233,7 +248,7 @@ aws vpc-lattice list-targets \
 }
 ```
 
-## `make weights`
+### `make weights`
 
 Show the Orders listener's current v1/v2 canary weight split
 
@@ -255,7 +270,7 @@ aws vpc-lattice get-listener \
 ]
 ```
 
-## `make ram-share`
+### `make ram-share`
 
 Show the cross-account RAM resource share status
 
@@ -308,7 +323,7 @@ aws ram get-resource-shares \
 }
 ```
 
-## `make status`
+### `make status`
 
 Run network+services+weights+health checks together (composite of the five targets above)
 
@@ -411,7 +426,7 @@ aws vpc-lattice list-targets \
 }
 ```
 
-## `make inventory`
+### `make inventory`
 
 List every tagged AWS resource in both accounts with status where available
 
@@ -463,7 +478,7 @@ List every tagged AWS resource in both accounts with status where available
   -                    arn:aws:vpc-lattice:us-east-1:222222222222:servicenetworkserviceassociation/snsa-0a3d7f6e4171700f7
 ```
 
-## `make ec2-status`
+### `make ec2-status`
 
 Show AccountId/Name/InstanceId/State/PrivateIp for every tagged EC2 instance in both accounts
 
