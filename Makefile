@@ -163,19 +163,19 @@ inventory: ## List every tagged AWS resource in both accounts with status where 
 # terminated instances visible in describe-instances for a while afterward,
 # so "State: terminated" here (not just an empty result) is the real
 # destroy-completed signal; an empty table means they've since aged out.
-ec2-status: ## Show AccountId/Name/InstanceId/State for every tagged EC2 instance in both accounts - works after terraform destroy too
+ec2-status: ## Show AccountId/Name/InstanceId/State/PrivateIp for every tagged EC2 instance in both accounts - works after terraform destroy too
 	@echo "=== Consumer account ($(CONSUMER_PROFILE), $(CONSUMER_ACCOUNT_ID)) ==="
 	@aws ec2 describe-instances \
 	  --profile $(CONSUMER_PROFILE) --region $(REGION) \
 	  --filters "Name=tag:Project,Values=VPC-Lattice-Showcase" \
-	  --query 'Reservations[].Instances[].{AccountId:`"$(CONSUMER_ACCOUNT_ID)"`,Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name}' \
+	  --query 'Reservations[].Instances[].{AccountId:`"$(CONSUMER_ACCOUNT_ID)"`,Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name,PrivateIp:PrivateIpAddress}' \
 	  --output table
 	@echo ""
 	@echo "=== Provider account ($(PROVIDER_PROFILE), $(PROVIDER_ACCOUNT_ID)) ==="
 	@aws ec2 describe-instances \
 	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
 	  --filters "Name=tag:Project,Values=VPC-Lattice-Showcase" \
-	  --query 'Reservations[].Instances[].{AccountId:`"$(PROVIDER_ACCOUNT_ID)"`,Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name}' \
+	  --query 'Reservations[].Instances[].{AccountId:`"$(PROVIDER_ACCOUNT_ID)"`,Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name,PrivateIp:PrivateIpAddress}' \
 	  --output table
 
 # ------------------------------------------------------------------------------
