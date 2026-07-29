@@ -158,7 +158,7 @@ The `Makefile` at the repo root drives the real, deployed stack — every target
 | `make destroy` | `terraform destroy` — tears down both accounts' resources |
 | `make outputs` | Print all terraform outputs |
 
-**Inspect the live stack** — read-only, safe to run anytime post-apply
+**Inspect the live stack** — read-only, safe to run anytime post-apply. See [`terraform/EXAMPLE-OUTPUT.md`](terraform/EXAMPLE-OUTPUT.md) for real captured output from every target below against a live deployment.
 
 | Target | What it does |
 |---|---|
