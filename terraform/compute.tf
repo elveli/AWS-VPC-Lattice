@@ -171,7 +171,18 @@ resource "aws_instance" "client" {
   # must be destroyed first - without this, destroy can try to detach the IGW
   # while this instance's public IP is still mapped and fail with
   # DependencyViolation: "has some mapped public address(es)".
-  depends_on = [aws_internet_gateway.consumer]
+  #
+  # Also wait for the VPC's service-network association to go ACTIVE first:
+  # nothing in this resource's attributes references it, so without an
+  # explicit depends_on, Terraform can launch this instance's ENI in
+  # parallel with (or just ahead of) the association. Not confirmed to
+  # cause issues in practice (a stop/start of an instance launched before
+  # the association went ACTIVE didn't reproduce a problem), but there's
+  # no reason to allow the race when ordering it correctly is free.
+  depends_on = [
+    aws_internet_gateway.consumer,
+    aws_vpclattice_service_network_vpc_association.consumer_vpc_association,
+  ]
 
   user_data = templatefile("${path.module}/templates/client_user_data.sh.tpl", {
     region           = var.aws_region
