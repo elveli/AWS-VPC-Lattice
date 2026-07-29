@@ -47,36 +47,9 @@ Other scripts: `npm run build` (production build), `npm run preview` (preview th
 
 ## Architecture Overview
 
-AWS VPC Lattice is an application-layer service network that connects, secures, and monitors services across different VPCs and AWS accounts, without transit gateways, PrivateLink, elaborate routing tables, or overlapping CIDR coordination. This is the topology the simulator models:
+AWS VPC Lattice is an application-layer service network that connects, secures, and monitors services across different VPCs and AWS accounts, without transit gateways, PrivateLink, elaborate routing tables, or overlapping CIDR coordination. This is the topology the simulator (and the real Terraform stack) models:
 
-```
-                  [ ACCOUNT A: CONSUMER ]
-                    +------------------+
-                    |   Consumer VPC   |
-                    |   (10.100.0.0)   |
-                    |  +------------+  |
-                    |  | Client EC2 |  |
-                    |  +-----+------+  |
-                    +--------|---------+
-                             | 
-               (AWS Link-Local: 169.254.171.0/24)
-                             v
-   =======================================================
-   [ ACCOUNT B (PROVIDER): PROD LATTICE SERVICE NETWORK ]
-   =======================================================
-                             |
-         SigV4 IAM Auth Check & Route Matching
-                             |
-         +-------------------+-------------------+
-         | (Weight: 90%)                         | (Weight: 10% / Path: /v2)
-         v                                       v
-+------------------------+              +------------------------+
-|    Order VPC (Acct B)  |              |    Serverless Lambda   |
-|   +----------------+   |              |   (Orders v2 Lambda)   |
-|   | Orders v1 IP   |   |              |                        |
-|   +----------------+   |              |                        |
-+------------------------+              +------------------------+
-```
+![Architecture overview: a Consumer VPC in Account A reaches a VPC Lattice service network in Account B over the AWS link-local range, which performs a SigV4 IAM auth check and weighted/path-based route matching before forwarding to the Orders v1 EC2 target (90%), Orders v2 Lambda target (10%, or 100% on the /v2 path), or the Payments v1 EC2 target (SigV4-restricted to a finance role).](assets/architecture-overview.svg)
 
 The **Terraform Blueprints** tab (backed by `terraform/`) illustrates:
 - **Three isolated VPCs**: one consumer/client VPC (Account A) and two backend VPCs (Account B — Orders & Payments).
