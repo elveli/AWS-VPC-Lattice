@@ -1,161 +1,167 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 730" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b45309"/>
     </marker>
-    <marker id="arrow-dim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#525252"/>
+    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#047857"/>
+    </marker>
+    <marker id="arrow-sky" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0369a1"/>
+    </marker>
+    <marker id="arrow-rose" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#be123c"/>
     </marker>
   </defs>
 
   <!-- canvas -->
-  <rect x="0" y="0" width="1300" height="730" rx="14" fill="#070707"/>
-  <rect x="1" y="1" width="1298" height="728" rx="13" fill="none" stroke="#262626"/>
+  <rect x="0" y="0" width="1300" height="730" rx="14" fill="#ffffff"/>
+  <rect x="1" y="1" width="1298" height="728" rx="13" fill="none" stroke="#e2e2e2"/>
 
   <!-- header -->
-  <text x="40" y="46" fill="#fbbf24" font-size="13" font-weight="700" letter-spacing="2">AWS VPC LATTICE</text>
-  <text x="40" y="67" fill="#a3a3a3" font-size="13">Multi-account service network — reference topology</text>
+  <text x="40" y="46" fill="#b45309" font-size="13" font-weight="700" letter-spacing="2">AWS VPC LATTICE</text>
+  <text x="40" y="67" fill="#525252" font-size="13">Multi-account service network — reference topology</text>
   <g transform="translate(1080,32)">
-    <rect x="0" y="0" width="180" height="24" rx="4" fill="#0c0c0c" stroke="#404040"/>
-    <text x="90" y="16" fill="#737373" font-size="11" text-anchor="middle" letter-spacing="1">REGION: us-east-1</text>
+    <rect x="0" y="0" width="180" height="24" rx="4" fill="#f7f7f7" stroke="#d4d4d4"/>
+    <text x="90" y="16" fill="#6b6b6b" font-size="11" text-anchor="middle" letter-spacing="1">REGION: us-east-1</text>
   </g>
-  <line x1="40" y1="86" x2="1260" y2="86" stroke="#1f1f1f"/>
+  <line x1="40" y1="86" x2="1260" y2="86" stroke="#e5e5e5"/>
 
   <!-- ============ ACCOUNT A: CONSUMER ============ -->
-  <rect x="40" y="118" width="300" height="572" rx="10" fill="none" stroke="#404040" stroke-dasharray="7 5"/>
+  <rect x="40" y="118" width="300" height="572" rx="10" fill="none" stroke="#a3a3a3" stroke-dasharray="7 5"/>
   <g transform="translate(60,142)">
-    <circle cx="9" cy="-4" r="9" fill="#171310" stroke="#78716c"/>
-    <text x="9" y="0" fill="#d6d3d1" font-size="11" text-anchor="middle" font-weight="700">A</text>
-    <text x="26" y="1" fill="#d4d4d4" font-size="13" font-weight="700" letter-spacing="0.5">ACCOUNT A · CONSUMER</text>
+    <circle cx="9" cy="-4" r="9" fill="#f5f5f4" stroke="#a8a29e"/>
+    <text x="9" y="0" fill="#57534e" font-size="11" text-anchor="middle" font-weight="700">A</text>
+    <text x="26" y="1" fill="#292524" font-size="13" font-weight="700" letter-spacing="0.5">ACCOUNT A · CONSUMER</text>
   </g>
   <text x="60" y="160" fill="#737373" font-size="11">111111111111 (placeholder)</text>
 
   <!-- Consumer VPC panel -->
-  <rect x="65" y="182" width="250" height="190" rx="8" fill="#0d0d0d" stroke="#2e2e2e"/>
-  <text x="82" y="206" fill="#e5e5e5" font-size="13" font-weight="700">Consumer VPC</text>
+  <rect x="65" y="182" width="250" height="190" rx="8" fill="#fafafa" stroke="#dcdcdc"/>
+  <text x="82" y="206" fill="#171717" font-size="13" font-weight="700">Consumer VPC</text>
   <text x="82" y="223" fill="#737373" font-size="11">10.100.0.0/16</text>
 
   <!-- Client EC2 card -->
-  <rect x="82" y="240" width="216" height="112" rx="6" fill="#101010" stroke="#3a3a3a"/>
+  <rect x="82" y="240" width="216" height="112" rx="6" fill="#ffffff" stroke="#d4d4d4"/>
   <g transform="translate(100,258)">
-    <rect x="0" y="0" width="26" height="18" rx="2" fill="none" stroke="#a3a3a3"/>
-    <rect x="0" y="21" width="26" height="18" rx="2" fill="none" stroke="#a3a3a3"/>
-    <circle cx="5" cy="9" r="1.6" fill="#a3a3a3"/>
-    <circle cx="5" cy="30" r="1.6" fill="#a3a3a3"/>
+    <rect x="0" y="0" width="26" height="18" rx="2" fill="none" stroke="#525252"/>
+    <rect x="0" y="21" width="26" height="18" rx="2" fill="none" stroke="#525252"/>
+    <circle cx="5" cy="9" r="1.6" fill="#525252"/>
+    <circle cx="5" cy="30" r="1.6" fill="#525252"/>
   </g>
-  <text x="140" y="266" fill="#e5e5e5" font-size="12.5" font-weight="700">Client EC2</text>
-  <text x="140" y="283" fill="#8a8a8a" font-size="10.5">SigV4-signed HTTP request</text>
+  <text x="140" y="266" fill="#171717" font-size="12.5" font-weight="700">Client EC2</text>
+  <text x="140" y="283" fill="#525252" font-size="10.5">SigV4-signed HTTP request</text>
   <text x="140" y="298" fill="#737373" font-size="10.5">IAM role: ClientRole</text>
-  <text x="100" y="330" fill="#5c5c5c" font-size="10" font-style="italic">No public IP — reached via</text>
-  <text x="100" y="343" fill="#5c5c5c" font-size="10" font-style="italic">SSM Session Manager</text>
+  <text x="100" y="330" fill="#8a8a8a" font-size="10" font-style="italic">No public IP — reached via</text>
+  <text x="100" y="343" fill="#8a8a8a" font-size="10" font-style="italic">SSM Session Manager</text>
 
-  <text x="65" y="662" fill="#525252" font-size="10.5" font-style="italic">Associated with the service network</text>
-  <text x="65" y="676" fill="#525252" font-size="10.5" font-style="italic">via AWS RAM (cross-account share)</text>
+  <text x="65" y="662" fill="#8a8a8a" font-size="10.5" font-style="italic">Associated with the service network</text>
+  <text x="65" y="676" fill="#8a8a8a" font-size="10.5" font-style="italic">via AWS RAM (cross-account share)</text>
 
   <!-- ============ SERVICE NETWORK (center) ============ -->
   <g>
-    <rect x="470" y="260" width="360" height="260" rx="12" fill="#120c02" stroke="#78530f"/>
-    <rect x="470" y="260" width="360" height="260" rx="12" fill="none" stroke="#f59e0b" stroke-opacity="0.35"/>
+    <rect x="470" y="260" width="360" height="260" rx="12" fill="#fffbeb" stroke="#f0c36d"/>
+    <rect x="470" y="260" width="360" height="260" rx="12" fill="none" stroke="#d97706" stroke-opacity="0.3"/>
 
     <!-- hex glyph -->
-    <polygon points="650,282 666,291 666,309 650,318 634,309 634,291" fill="none" stroke="#fbbf24" stroke-width="2"/>
-    <circle cx="650" cy="300" r="4" fill="#fbbf24"/>
+    <polygon points="650,282 666,291 666,309 650,318 634,309 634,291" fill="none" stroke="#b45309" stroke-width="2"/>
+    <circle cx="650" cy="300" r="4" fill="#b45309"/>
 
-    <text x="650" y="345" fill="#f5f5f5" font-size="15" font-weight="700" text-anchor="middle">VPC Lattice Service Network</text>
-    <text x="650" y="363" fill="#a8875a" font-size="11" text-anchor="middle">svc-network / prod-network</text>
+    <text x="650" y="345" fill="#292524" font-size="15" font-weight="700" text-anchor="middle">VPC Lattice Service Network</text>
+    <text x="650" y="363" fill="#92650f" font-size="11" text-anchor="middle">svc-network / prod-network</text>
 
-    <line x1="500" y1="381" x2="800" y2="381" stroke="#3d2a08"/>
+    <line x1="500" y1="381" x2="800" y2="381" stroke="#eed9a8"/>
 
     <g transform="translate(500,398)">
-      <rect x="0" y="0" width="16" height="12" rx="2" fill="none" stroke="#fbbf24"/>
-      <path d="M3,0 v-4 a5,5 0 0 1 10,0 v4" fill="none" stroke="#fbbf24"/>
-      <text x="26" y="10" fill="#e5c98a" font-size="12">SigV4 IAM auth check</text>
+      <rect x="0" y="0" width="16" height="12" rx="2" fill="none" stroke="#b45309"/>
+      <path d="M3,0 v-4 a5,5 0 0 1 10,0 v4" fill="none" stroke="#b45309"/>
+      <text x="26" y="10" fill="#8a5a10" font-size="12">SigV4 IAM auth check</text>
     </g>
     <g transform="translate(500,426)">
-      <path d="M0,6 h16 M11,1 l5,5 l-5,5" fill="none" stroke="#fbbf24"/>
-      <text x="26" y="10" fill="#e5c98a" font-size="12">Path &amp; weighted route matching</text>
+      <path d="M0,6 h16 M11,1 l5,5 l-5,5" fill="none" stroke="#b45309"/>
+      <text x="26" y="10" fill="#8a5a10" font-size="12">Path &amp; weighted route matching</text>
     </g>
     <g transform="translate(500,454)">
-      <circle cx="7" cy="6" r="6" fill="none" stroke="#fbbf24"/>
-      <path d="M7,3 v3 l2,2" stroke="#fbbf24" fill="none"/>
-      <text x="26" y="10" fill="#e5c98a" font-size="12">Access logs (all requests)</text>
+      <circle cx="7" cy="6" r="6" fill="none" stroke="#b45309"/>
+      <path d="M7,3 v3 l2,2" stroke="#b45309" fill="none"/>
+      <text x="26" y="10" fill="#8a5a10" font-size="12">Access logs (all requests)</text>
     </g>
 
-    <text x="650" y="495" fill="#8a6d3a" font-size="10.5" text-anchor="middle" font-style="italic">L7 mesh — shared across VPCs &amp; accounts</text>
+    <text x="650" y="495" fill="#9a7b2e" font-size="10.5" text-anchor="middle" font-style="italic">L7 mesh — shared across VPCs &amp; accounts</text>
   </g>
 
   <!-- Consumer -> Service network -->
-  <path d="M340,300 C 400,300 410,340 470,352" fill="none" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#arrow)"/>
-  <text x="352" y="285" fill="#d1a355" font-size="10.5">AWS link-local</text>
-  <text x="352" y="298" fill="#d1a355" font-size="10.5">169.254.171.0/24</text>
+  <path d="M340,300 C 400,300 410,340 470,352" fill="none" stroke="#b45309" stroke-width="1.6" marker-end="url(#arrow-amber)"/>
+  <text x="352" y="285" fill="#92650f" font-size="10.5">AWS link-local</text>
+  <text x="352" y="298" fill="#92650f" font-size="10.5">169.254.171.0/24</text>
 
   <!-- ============ ACCOUNT B: PROVIDER ============ -->
-  <rect x="960" y="118" width="300" height="572" rx="10" fill="none" stroke="#404040" stroke-dasharray="7 5"/>
+  <rect x="960" y="118" width="300" height="572" rx="10" fill="none" stroke="#a3a3a3" stroke-dasharray="7 5"/>
   <g transform="translate(980,142)">
-    <circle cx="9" cy="-4" r="9" fill="#171310" stroke="#78716c"/>
-    <text x="9" y="0" fill="#d6d3d1" font-size="11" text-anchor="middle" font-weight="700">B</text>
-    <text x="26" y="1" fill="#d4d4d4" font-size="13" font-weight="700" letter-spacing="0.5">ACCOUNT B · PROVIDER</text>
+    <circle cx="9" cy="-4" r="9" fill="#f5f5f4" stroke="#a8a29e"/>
+    <text x="9" y="0" fill="#57534e" font-size="11" text-anchor="middle" font-weight="700">B</text>
+    <text x="26" y="1" fill="#292524" font-size="13" font-weight="700" letter-spacing="0.5">ACCOUNT B · PROVIDER</text>
   </g>
   <text x="980" y="160" fill="#737373" font-size="11">222222222222 (placeholder)</text>
 
   <!-- Orders VPC panel -->
-  <rect x="985" y="182" width="250" height="200" rx="8" fill="#0d0d0d" stroke="#2e2e2e"/>
-  <text x="1002" y="206" fill="#e5e5e5" font-size="13" font-weight="700">Orders VPC</text>
+  <rect x="985" y="182" width="250" height="200" rx="8" fill="#fafafa" stroke="#dcdcdc"/>
+  <text x="1002" y="206" fill="#171717" font-size="13" font-weight="700">Orders VPC</text>
   <text x="1002" y="223" fill="#737373" font-size="11">10.200.0.0/16</text>
 
-  <rect x="1002" y="238" width="216" height="62" rx="6" fill="#0b120d" stroke="#245c3d"/>
+  <rect x="1002" y="238" width="216" height="62" rx="6" fill="#ecfdf5" stroke="#6ee7b7"/>
   <g transform="translate(1016,254)">
-    <rect x="0" y="0" width="22" height="16" rx="2" fill="none" stroke="#6ee7b7"/>
-    <circle cx="4" cy="8" r="1.4" fill="#6ee7b7"/>
+    <rect x="0" y="0" width="22" height="16" rx="2" fill="none" stroke="#059669"/>
+    <circle cx="4" cy="8" r="1.4" fill="#059669"/>
   </g>
-  <text x="1050" y="262" fill="#d1fae5" font-size="12" font-weight="700">Orders v1 · IP target</text>
-  <text x="1050" y="277" fill="#6ee7b7" font-size="10.5">EC2, private IP target group</text>
+  <text x="1050" y="262" fill="#064e3b" font-size="12" font-weight="700">Orders v1 · IP target</text>
+  <text x="1050" y="277" fill="#047857" font-size="10.5">EC2, private IP target group</text>
 
   <!-- Lambda card (outside VPC = serverless) -->
-  <rect x="1002" y="392" width="216" height="62" rx="6" fill="#0b0f14" stroke="#2c4a63"/>
+  <rect x="1002" y="392" width="216" height="62" rx="6" fill="#f0f9ff" stroke="#7dd3fc"/>
   <g transform="translate(1016,406)">
-    <path d="M2,0 L10,0 L4,10 L11,10 L1,20" fill="none" stroke="#7dd3fc" stroke-width="1.4"/>
+    <path d="M2,0 L10,0 L4,10 L11,10 L1,20" fill="none" stroke="#0284c7" stroke-width="1.4"/>
   </g>
-  <text x="1050" y="416" fill="#e0f2fe" font-size="12" font-weight="700">Orders v2 · Lambda target</text>
-  <text x="1050" y="431" fill="#7dd3fc" font-size="10.5">Serverless — no VPC attach</text>
-  <text x="1002" y="470" fill="#525252" font-size="10" font-style="italic">(outside Orders VPC — invoked</text>
-  <text x="1002" y="483" fill="#525252" font-size="10" font-style="italic">directly by the service network)</text>
+  <text x="1050" y="416" fill="#0c4a6e" font-size="12" font-weight="700">Orders v2 · Lambda target</text>
+  <text x="1050" y="431" fill="#0369a1" font-size="10.5">Serverless — no VPC attach</text>
+  <text x="1002" y="470" fill="#8a8a8a" font-size="10" font-style="italic">(outside Orders VPC — invoked</text>
+  <text x="1002" y="483" fill="#8a8a8a" font-size="10" font-style="italic">directly by the service network)</text>
 
   <!-- Payments VPC panel -->
-  <rect x="985" y="520" width="250" height="140" rx="8" fill="#0d0d0d" stroke="#2e2e2e"/>
-  <text x="1002" y="544" fill="#e5e5e5" font-size="13" font-weight="700">Payments VPC</text>
+  <rect x="985" y="520" width="250" height="140" rx="8" fill="#fafafa" stroke="#dcdcdc"/>
+  <text x="1002" y="544" fill="#171717" font-size="13" font-weight="700">Payments VPC</text>
   <text x="1002" y="561" fill="#737373" font-size="11">10.250.0.0/16</text>
 
-  <rect x="1002" y="576" width="216" height="62" rx="6" fill="#150c0c" stroke="#5c2a2a"/>
+  <rect x="1002" y="576" width="216" height="62" rx="6" fill="#fff1f2" stroke="#fda4af"/>
   <g transform="translate(1016,592)">
-    <rect x="0" y="0" width="22" height="16" rx="2" fill="none" stroke="#fca5a5"/>
-    <circle cx="4" cy="8" r="1.4" fill="#fca5a5"/>
+    <rect x="0" y="0" width="22" height="16" rx="2" fill="none" stroke="#e11d48"/>
+    <circle cx="4" cy="8" r="1.4" fill="#e11d48"/>
   </g>
-  <text x="1050" y="600" fill="#fecaca" font-size="12" font-weight="700">Payments v1 · IP target</text>
-  <text x="1050" y="615" fill="#fca5a5" font-size="10.5">FinanceServiceRole only</text>
+  <text x="1050" y="600" fill="#881337" font-size="12" font-weight="700">Payments v1 · IP target</text>
+  <text x="1050" y="615" fill="#be123c" font-size="10.5">FinanceServiceRole only</text>
 
   <!-- Service network -> Orders v1 -->
-  <path d="M830,340 C 900,320 950,270 1002,262" fill="none" stroke="#6ee7b7" stroke-width="1.6" marker-end="url(#arrow-dim)"/>
-  <text x="852" y="318" fill="#8fdcbb" font-size="11" font-weight="700">weight 90%</text>
+  <path d="M830,340 C 900,320 950,270 1002,262" fill="none" stroke="#059669" stroke-width="1.6" marker-end="url(#arrow-emerald)"/>
+  <text x="852" y="318" fill="#047857" font-size="11" font-weight="700">weight 90%</text>
 
   <!-- Service network -> Orders v2 (Lambda) -->
-  <path d="M830,412 C 900,418 950,428 1002,434" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-dim)"/>
-  <text x="852" y="393" fill="#a9e2f9" font-size="11" font-weight="700">weight 10%</text>
-  <text x="852" y="406" fill="#7dd3fc" font-size="10">path prefix /v2 → 100%</text>
+  <path d="M830,412 C 900,418 950,428 1002,434" fill="none" stroke="#0284c7" stroke-width="1.6" marker-end="url(#arrow-sky)"/>
+  <text x="852" y="393" fill="#0369a1" font-size="11" font-weight="700">weight 10%</text>
+  <text x="852" y="406" fill="#0369a1" font-size="10">path prefix /v2 → 100%</text>
 
   <!-- Service network -> Payments v1 -->
-  <path d="M830,470 C 900,500 950,570 1002,600" fill="none" stroke="#fca5a5" stroke-width="1.6" marker-end="url(#arrow-dim)"/>
-  <text x="852" y="500" fill="#f3b8b8" font-size="11" font-weight="700">SigV4 required</text>
+  <path d="M830,470 C 900,500 950,570 1002,600" fill="none" stroke="#e11d48" stroke-width="1.6" marker-end="url(#arrow-rose)"/>
+  <text x="852" y="500" fill="#be123c" font-size="11" font-weight="700">SigV4 required</text>
 
-  <text x="985" y="662" fill="#525252" font-size="10.5" font-style="italic">Both VPCs associated to the</text>
-  <text x="985" y="676" fill="#525252" font-size="10.5" font-style="italic">service network directly (same account)</text>
+  <text x="985" y="662" fill="#8a8a8a" font-size="10.5" font-style="italic">Both VPCs associated to the</text>
+  <text x="985" y="676" fill="#8a8a8a" font-size="10.5" font-style="italic">service network directly (same account)</text>
 
   <!-- legend -->
   <g transform="translate(420,660)">
-    <line x1="0" y1="0" x2="26" y2="0" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#arrow)"/>
-    <text x="34" y="4" fill="#8a8a8a" font-size="11">request path</text>
+    <line x1="0" y1="0" x2="26" y2="0" stroke="#b45309" stroke-width="1.6" marker-end="url(#arrow-amber)"/>
+    <text x="34" y="4" fill="#6b6b6b" font-size="11">request path</text>
 
-    <line x1="150" y1="0" x2="176" y2="0" stroke="#404040" stroke-dasharray="5 4"/>
-    <text x="184" y="4" fill="#8a8a8a" font-size="11">account / VPC boundary</text>
+    <line x1="150" y1="0" x2="176" y2="0" stroke="#a3a3a3" stroke-dasharray="5 4"/>
+    <text x="184" y="4" fill="#6b6b6b" font-size="11">account / VPC boundary</text>
   </g>
 </svg>
