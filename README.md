@@ -200,7 +200,7 @@ The `Makefile` at the repo root drives the real, deployed stack — every target
 | `make ram-share` | Show the cross-account RAM resource share status |
 | `make status` | Runs `network` + `services` + `weights` + both health checks together |
 | `make inventory` | List every tagged AWS resource in both accounts (`Project=VPC-Lattice-Showcase`), via the Resource Groups Tagging API |
-| `make ec2-status` | Show Name/InstanceId/State for every tagged EC2 instance in both accounts — queried by tag, not `terraform output`, so it still works right after `terraform destroy` to confirm instances actually terminated |
+| `make ec2-status` | Show AccountId/Name/InstanceId/State for every tagged EC2 instance in both accounts — queried by tag, not `terraform output`, so it still works right after `terraform destroy` to confirm instances actually terminated |
 
 **Drive real traffic / mutate the live stack**
 

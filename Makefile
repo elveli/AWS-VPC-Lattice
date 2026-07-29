@@ -34,6 +34,12 @@ REGION           = $(shell out=$$($(TF) output -raw aws_region 2>/dev/null); ech
 CONSUMER_PROFILE = $(shell out=$$($(TF) output -raw consumer_profile 2>/dev/null); echo "$${out:-consumer}")
 PROVIDER_PROFILE = $(shell out=$$($(TF) output -raw provider_profile 2>/dev/null); echo "$${out:-provider}")
 
+# Resolved via STS (not terraform output var.consumer_account_id/var.provider_account_id),
+# since those stay as placeholder defaults unless terraform.tfvars overrides
+# them - STS always reflects whichever account the profile actually points at.
+CONSUMER_ACCOUNT_ID = $(shell aws sts get-caller-identity --profile $(CONSUMER_PROFILE) --region $(REGION) --query Account --output text 2>/dev/null)
+PROVIDER_ACCOUNT_ID = $(shell aws sts get-caller-identity --profile $(PROVIDER_PROFILE) --region $(REGION) --query Account --output text 2>/dev/null)
+
 .DEFAULT_GOAL := help
 
 .PHONY: help init plan apply destroy outputs \
@@ -145,19 +151,19 @@ inventory: ## List every tagged AWS resource in both accounts (Project=VPC-Latti
 # terminated instances visible in describe-instances for a while afterward,
 # so "State: terminated" here (not just an empty result) is the real
 # destroy-completed signal; an empty table means they've since aged out.
-ec2-status: ## Show Name/InstanceId/State for every tagged EC2 instance in both accounts - works after terraform destroy too
-	@echo "=== Consumer account ($(CONSUMER_PROFILE)) ==="
+ec2-status: ## Show AccountId/Name/InstanceId/State for every tagged EC2 instance in both accounts - works after terraform destroy too
+	@echo "=== Consumer account ($(CONSUMER_PROFILE), $(CONSUMER_ACCOUNT_ID)) ==="
 	@aws ec2 describe-instances \
 	  --profile $(CONSUMER_PROFILE) --region $(REGION) \
 	  --filters "Name=tag:Project,Values=VPC-Lattice-Showcase" \
-	  --query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name}' \
+	  --query 'Reservations[].Instances[].{AccountId:`"$(CONSUMER_ACCOUNT_ID)"`,Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name}' \
 	  --output table
 	@echo ""
-	@echo "=== Provider account ($(PROVIDER_PROFILE)) ==="
+	@echo "=== Provider account ($(PROVIDER_PROFILE), $(PROVIDER_ACCOUNT_ID)) ==="
 	@aws ec2 describe-instances \
 	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
 	  --filters "Name=tag:Project,Values=VPC-Lattice-Showcase" \
-	  --query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name}' \
+	  --query 'Reservations[].Instances[].{AccountId:`"$(PROVIDER_ACCOUNT_ID)"`,Name:Tags[?Key==`Name`]|[0].Value,InstanceId:InstanceId,State:State.Name}' \
 	  --output table
 
 # ------------------------------------------------------------------------------
