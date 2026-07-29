@@ -167,6 +167,12 @@ resource "aws_instance" "client" {
   iam_instance_profile        = aws_iam_instance_profile.client.name
   associate_public_ip_address = true
 
+  # No attribute ties this instance to the IGW, so Terraform doesn't know it
+  # must be destroyed first - without this, destroy can try to detach the IGW
+  # while this instance's public IP is still mapped and fail with
+  # DependencyViolation: "has some mapped public address(es)".
+  depends_on = [aws_internet_gateway.consumer]
+
   user_data = templatefile("${path.module}/templates/client_user_data.sh.tpl", {
     region           = var.aws_region
     orders_domain    = aws_vpclattice_service.orders.dns_entry[0].domain_name
@@ -192,6 +198,9 @@ resource "aws_instance" "order_app" {
   iam_instance_profile        = aws_iam_instance_profile.app.name
   associate_public_ip_address = true
 
+  # See aws_instance.client above - same DependencyViolation-on-destroy fix.
+  depends_on = [aws_internet_gateway.order]
+
   user_data = templatefile("${path.module}/templates/app_user_data.sh.tpl", {
     service_name = "Orders v1 (EC2)"
     health_path  = "/health"
@@ -208,6 +217,9 @@ resource "aws_instance" "payment_app" {
   vpc_security_group_ids      = [aws_security_group.payment_app_sg.id]
   iam_instance_profile        = aws_iam_instance_profile.app.name
   associate_public_ip_address = true
+
+  # See aws_instance.client above - same DependencyViolation-on-destroy fix.
+  depends_on = [aws_internet_gateway.payment]
 
   user_data = templatefile("${path.module}/templates/app_user_data.sh.tpl", {
     service_name = "Payments v1 (EC2)"
