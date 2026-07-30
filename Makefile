@@ -204,7 +204,7 @@ define ssm-run
 endef
 
 connect: ## Open an interactive SSM session on the client instance
-	$(TF) output -raw connect_to_client | sh
+	eval "$$($(TF) output -raw connect_to_client)"
 
 demo-orders: ## Invoke Orders with the client's own role via SSM (expect HTTP 200)
 	$(call ssm-run,/opt/lattice-demo/invoke-orders.sh)
