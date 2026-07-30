@@ -252,6 +252,14 @@ resource "aws_vpclattice_target_group_attachment" "orders_v1" {
     id   = aws_instance.order_app.private_ip
     port = 80
   }
+
+  # Nothing else here references the service network, so without this,
+  # `terraform destroy` can tear it down concurrently with (or before) this
+  # attachment. Once the service network's gone the target group flips to
+  # UNUSED mid-delete and the provider's waiter errors out instead of
+  # treating "already deregistered" as done - same destroy-ordering class
+  # of bug as aws_instance.client/order_app/payment_app above.
+  depends_on = [aws_vpclattice_service_network.prod_network]
 }
 
 resource "aws_vpclattice_target_group_attachment" "payments_v1" {
@@ -262,4 +270,7 @@ resource "aws_vpclattice_target_group_attachment" "payments_v1" {
     id   = aws_instance.payment_app.private_ip
     port = 80
   }
+
+  # See aws_vpclattice_target_group_attachment.orders_v1 above.
+  depends_on = [aws_vpclattice_service_network.prod_network]
 }
