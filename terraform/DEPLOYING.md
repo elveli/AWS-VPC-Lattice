@@ -65,6 +65,10 @@ Once connected, the helper scripts in `/opt/lattice-demo/` are ready to go:
 
 You can also `curl` the `/v2` path directly (via any of the scripts' pattern) to see the listener rule override that sends `/v2/*` to the Lambda target 100% of the time, regardless of the weighted default.
 
+The "v1" backends aren't real services either — `order_app` and `payment_app` are plain EC2 instances running nginx ([`templates/app_user_data.sh.tpl`](templates/app_user_data.sh.tpl)), configured to return a static `200 "Hello from {service_name}"` on `/` and `200 "OK - {service_name}"` on a health-check path (`/health` for Orders, `/ping` for Payments) — just enough to be a distinguishable, health-checkable backend.
+
+The "Orders v2" backend behind the Lambda target is the same idea, one level further: [`lambda_src/orders_v2/handler.py`](lambda_src/orders_v2/handler.py) just returns a static `200` with the body `Hello from Orders v2 Lambda, running on provider (222222222222) account`, purely so `canary-sample.sh` has distinct text (matched on the `v2` substring) to tally against the EC2 (v1) responses. It's deployed in the provider account with no `vpc_config` (genuinely serverless, outside the Orders VPC entirely — see [`lambda.tf`](lambda.tf)), and `aws_lambda_permission.orders_v2_lattice` locks `lambda:InvokeFunction` down to the `vpc-lattice.amazonaws.com` principal scoped to this one target group's ARN, so nothing but the Orders listener can invoke it.
+
 If a script fails with `curl: option --aws-sigv4: not supported`, the AMI's `curl-minimal` build is missing it — run `sudo dnf swap curl-minimal curl -y` and retry.
 
 ## Makefile shortcuts

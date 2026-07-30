@@ -3,5 +3,5 @@ def lambda_handler(event, context):
         "isBase64Encoded": False,
         "statusCode": 200,
         "headers": {"Content-Type": "text/plain"},
-        "body": "Hello from Orders v2 (Lambda)",
+        "body": "Hello from Orders v2 Lambda, running on provider (222222222222) account",
     }
