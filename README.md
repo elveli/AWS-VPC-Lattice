@@ -7,6 +7,7 @@ An interactive learning tool for **AWS VPC Lattice** — multi-account/multi-VPC
 - [Simulator vs. real deployment](#simulator-vs-real-deployment)
 - [Features](#features)
 - [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
 - [Architecture Overview](#architecture-overview)
   - [Lattice vs. PrivateLink](#lattice-vs-privatelink)
 - [IAM-Based Authentication & SigV4 Signing](#iam-based-authentication--sigv4-signing)
@@ -44,6 +45,48 @@ Then open `http://localhost:3000`.
 Other scripts: `npm run build` (production build), `npm run preview` (preview the build), `npm run lint` (`tsc --noEmit`).
 
 ---
+
+## Project Structure
+
+```
+AWS-VPC-Lattice/
+├── README.md
+├── CLAUDE.md
+├── Makefile                        # drives the real deployed stack - terraform + aws vpc-lattice/ram/ssm calls
+│
+├── assets/
+│   └── architecture-overview.svg   # diagram embedded above
+│
+├── src/                             # the client-only simulator (Vite + React 19 + TypeScript)
+│   ├── App.tsx                      # tab shell; holds the shared SimulationConfig/LogEntry state
+│   ├── types.ts                     # SimulationConfig, LogEntry, CliCommand, TerraformFile
+│   ├── components/
+│   │   ├── NetworkTopology.tsx      # animates a request, derives the auth outcome, emits LogEntrys
+│   │   ├── IAMPolicyTester.tsx      # editable Service Network / Service auth policy JSON
+│   │   ├── TerraformViewer.tsx      # renders src/data/terraformBlueprints.ts
+│   │   └── CLITerminal.tsx          # renders src/data/cliCommands.ts
+│   └── data/
+│       ├── terraformBlueprints.ts   # in-app copy of the terraform/ blueprints (synced by hand)
+│       └── cliCommands.ts           # canned aws vpc-lattice / ram command+output pairs
+│
+└── terraform/                       # genuinely `terraform apply`-able, cost-bearing, ephemeral
+    ├── DEPLOYING.md                 # setup, cost breakdown, usage walkthrough, teardown
+    ├── EXAMPLE-OUTPUT.md            # captured `make` output from a real deployment
+    ├── providers.tf                 # consumer + provider account aliases
+    ├── vpc.tf                       # 3 VPCs, subnets, security groups, Lattice prefix lists
+    ├── compute.tf                   # client/order/payment EC2 instances, target group attachments
+    ├── lattice_network.tf           # service network, VPC associations, cross-account RAM share
+    ├── lattice_services.tf          # Orders/Payments services, listeners, canary target groups
+    ├── lambda.tf                    # Orders v2 Lambda target
+    ├── lambda_src/orders_v2/
+    │   └── handler.py               # static stand-in handler behind the Lambda target
+    ├── templates/
+    │   ├── client_user_data.sh.tpl  # drops the /opt/lattice-demo/*.sh scripts on the client
+    │   └── app_user_data.sh.tpl     # nginx static-response backend for order_app/payment_app
+    ├── variables.tf
+    ├── outputs.tf
+    └── terraform.tfvars.example     # copy to terraform.tfvars (gitignored) with real account IDs
+```
 
 ## Architecture Overview
 
