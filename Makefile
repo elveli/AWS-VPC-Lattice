@@ -88,7 +88,9 @@ network: ## Describe the Service Network (auth type, associations)
 services: ## List services associated with the Service Network
 	aws vpc-lattice list-service-network-service-associations \
 	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
-	  --service-network-identifier "$$($(TF) output -raw service_network_id)"
+	  --service-network-identifier "$$($(TF) output -raw service_network_id)" \
+	  --query 'items[].{Service:serviceName,Status:status,DNS:dnsEntry.domainName}' \
+	  --output table
 
 orders: ## Describe the Orders service
 	aws vpc-lattice get-service \
@@ -100,9 +102,26 @@ payments: ## Describe the Payments service
 	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
 	  --service-identifier "$$($(TF) output -raw payments_service_arn)"
 
-target-groups: ## List all target groups in the provider account
-	aws vpc-lattice list-target-groups \
-	  --profile $(PROVIDER_PROFILE) --region $(REGION)
+target-groups: ## List all target groups in the provider account, with registered IP/instance (or Lambda runtime/state) per group
+	@printf "%-22s %-8s %-8s %-16s %-22s %-22s %-12s %s\n" "NAME" "TYPE" "STATUS" "IP" "TARGET" "DETAIL" "REGION" "ACCOUNT"
+	@aws vpc-lattice list-target-groups \
+	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
+	  --query 'items[].[id,name,type,status,port]' --output text | \
+	while IFS=$$'\t' read -r id name type st port; do \
+	  if [ "$$type" = "IP" ]; then \
+	    ip=$$(aws vpc-lattice list-targets --profile $(PROVIDER_PROFILE) --region $(REGION) --target-group-identifier "$$id" --query 'items[0].id' --output text 2>/dev/null); \
+	    target=$$(aws ec2 describe-instances --profile $(PROVIDER_PROFILE) --region $(REGION) --filters "Name=private-ip-address,Values=$$ip" --query 'Reservations[0].Instances[0].InstanceId' --output text 2>/dev/null); \
+	    detail="-"; \
+	  elif [ "$$type" = "LAMBDA" ]; then \
+	    fn_arn=$$(aws vpc-lattice list-targets --profile $(PROVIDER_PROFILE) --region $(REGION) --target-group-identifier "$$id" --query 'items[0].id' --output text 2>/dev/null); \
+	    ip="-"; \
+	    read -r target runtime state <<< "$$(aws lambda get-function --profile $(PROVIDER_PROFILE) --region $(REGION) --function-name "$$fn_arn" --query '[Configuration.FunctionName,Configuration.Runtime,Configuration.State]' --output text 2>/dev/null)"; \
+	    detail="$$runtime, $$state"; \
+	  else \
+	    ip="-"; target="-"; detail="-"; \
+	  fi; \
+	  printf "%-22s %-8s %-8s %-16s %-22s %-22s %-12s %s\n" "$$name" "$$type" "$$st" "$$ip" "$${target:--}" "$$detail" "$(REGION)" "$(PROVIDER_ACCOUNT_ID)"; \
+	done
 
 orders-health: ## Health-check status of the Orders v1 (EC2) target
 	aws vpc-lattice list-targets \
@@ -121,10 +140,25 @@ weights: ## Show the Orders listener's current v1/v2 canary weight split
 	  --listener-identifier "$$($(TF) output -raw orders_listener_id)" \
 	  --query 'defaultAction.forward.targetGroups'
 
-ram-share: ## Show the cross-account RAM resource share status
-	aws ram get-resource-shares \
-	  --profile $(PROVIDER_PROFILE) --region $(REGION) \
-	  --resource-owner SELF --name vpc-lattice-shared-service-network
+ram-share: ## Show the cross-account RAM resource share: who it's shared with and what's shared
+	@aws ram get-resource-shares --profile $(PROVIDER_PROFILE) --region $(REGION) \
+	  --resource-owner SELF --name vpc-lattice-shared-service-network \
+	  --query 'resourceShares[0].{Name:name,Status:status,Owner:owningAccountId,AllowExternal:allowExternalPrincipals}' \
+	  --output table
+	@echo "Shared with:"
+	@ARN=$$(aws ram get-resource-shares --profile $(PROVIDER_PROFILE) --region $(REGION) \
+	  --resource-owner SELF --name vpc-lattice-shared-service-network \
+	  --query 'resourceShares[0].resourceShareArn' --output text); \
+	aws ram get-resource-share-associations --profile $(PROVIDER_PROFILE) --region $(REGION) \
+	  --association-type PRINCIPAL --resource-share-arns "$$ARN" \
+	  --query 'resourceShareAssociations[].{Principal:associatedEntity,Status:status}' --output table
+	@echo "Shared resource:"
+	@ARN=$$(aws ram get-resource-shares --profile $(PROVIDER_PROFILE) --region $(REGION) \
+	  --resource-owner SELF --name vpc-lattice-shared-service-network \
+	  --query 'resourceShares[0].resourceShareArn' --output text); \
+	aws ram get-resource-share-associations --profile $(PROVIDER_PROFILE) --region $(REGION) \
+	  --association-type RESOURCE --resource-share-arns "$$ARN" \
+	  --query 'resourceShareAssociations[].{Resource:associatedEntity,Status:status}' --output table
 
 status: network services weights orders-health payments-health ## Run network+services+weights+health checks together
 
