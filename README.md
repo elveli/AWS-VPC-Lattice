@@ -54,7 +54,7 @@ AWS VPC Lattice is an application-layer service network that connects, secures, 
 The **Terraform Blueprints** tab (backed by `terraform/`) illustrates:
 - **Three isolated VPCs**: one consumer/client VPC (Account A) and two backend VPCs (Account B — Orders & Payments).
 - **Service Network**: a central communication domain shared securely across account boundaries with custom IAM auth policies.
-- **Microservice targets**: IP targets (ECS/Fargate) and serverless targets (Lambda) behind weighted canary rules.
+- **Microservice targets**: IP targets (plain EC2) and a serverless Lambda target — a static stand-in handler, just enough to be a distinguishable second backend for the canary split — behind weighted canary rules.
 - **Cross-account sharing**: AWS RAM (Resource Access Manager) to link VPCs to the service network.
 
 > ⚠️ **This Terraform is real, cost-bearing infrastructure**, not just illustrative — it's genuinely `terraform apply`-able against two AWS accounts (variable defaults are placeholder account IDs; real ones go in a gitignored `terraform.tfvars`). Running it costs roughly **$0.08–0.10/hour**. See [`terraform/DEPLOYING.md`](terraform/DEPLOYING.md) for setup, cost breakdown, a usage walkthrough, and the `terraform destroy` step — don't leave it running. Once deployed, drive it via the [Makefile Reference](#makefile-reference) below instead of hand-typing commands.
