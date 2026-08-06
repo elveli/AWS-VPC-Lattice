@@ -201,7 +201,7 @@ The `Makefile` at the repo root drives the real, deployed stack — every target
 | `make destroy` | `terraform destroy` — tears down both accounts' resources |
 | `make outputs` | Print all terraform outputs |
 
-**Inspect the live stack** — read-only, safe to run anytime post-apply. See [`terraform/EXAMPLE-OUTPUT.md`](terraform/EXAMPLE-OUTPUT.md) for real captured output from every target below against a live deployment.
+**Inspect the live stack** — read-only, safe to run anytime post-apply. These are all **control-plane** calls: they report what state VPC Lattice's API thinks a resource is in (`ACTIVE`/`HEALTHY`), not whether a request actually gets a response. To validate the deployment for real, use the traffic-driving targets further down (`make demo-orders` etc.) — see [terraform/DEPLOYING.md#try-it-out](terraform/DEPLOYING.md#try-it-out). See [`terraform/EXAMPLE-OUTPUT.md`](terraform/EXAMPLE-OUTPUT.md) for real captured output from every target below against a live deployment.
 
 | Target | What it does |
 |---|---|

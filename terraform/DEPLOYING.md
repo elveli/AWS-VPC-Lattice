@@ -50,6 +50,8 @@ Verified against AWS's current pricing pages (July 2026), region `us-east-1`:
 
 ## Try it out
 
+`make status` and the other read-only Makefile targets (see the [README's Makefile Reference](../README.md#makefile-reference)) only check the **control plane** — they ask VPC Lattice's API what state a resource is in, and it can genuinely answer `ACTIVE`/`HEALTHY` while the **data plane** still isn't passing traffic. Control-plane-healthy is not the same as working. The only real validation that the deployment works end-to-end is sending an actual request, below — don't treat `make status` alone as confirmation.
+
 After `apply` finishes, connect to the client instance via SSM (no SSH keys needed):
 
 ```
